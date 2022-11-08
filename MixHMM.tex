@@ -67,15 +67,19 @@ a clear period (coded 1) or a noisy period (coded 2).  The observed
 state is the actual received bit.
 
 A complicating factor in the first example is that, if indeed there are
-two geysers, we observe the minimum of two geyser times.  So,
-from this point onward, we will focus on the second motivating model,
-that of the noisy network.
+two geysers, we observe the minimum of two geyser times.  So, from this
+point onward, we will mostly focus on the second motivating model, that
+of the noisy network.
 
 \section{``Time''}
 
 In some applications, time is really time.  If our data is stock price,
 say, we have Day 1, Day 2, Day 3 and so on.  In other applications,
 ``time'' is an index, such at Bit 1, Bit 2, Bit 3 etc.
+
+In the case of MMs, in some applications there may not even be a time
+component.  This will be clear below, but for now, let's continue to
+focus on the network example. 
 
 \section{Conditional Probabilities of Observed Values}
 
@@ -99,11 +103,17 @@ where $f_{Y|S}$ is the conditional density of $Y$ given $S$.
 These conditional distribution quantities are then used to estimate
 model parameters, as we will see below.
 
-\section{Mixture Models vs.\ HMMs}
+\section{Mixture Models vs.\ HMMs: the 10,000 Foot View}
 
 Both types of models have hidden and observed states.  But HMMs add an
 extra aspect:  We model the probabilities of going from one state to
-another in one unit of time.
+another in one unit of time.  So this is a dynamic model, while MMs are
+static. 
+
+In the Old Faithful example, for instance, in an MM we may wish to
+estimate the overall proportion of eruptions that come from, say, Geyser
+2, while in an HMM we may wish to have an estimated probability that the
+\textit{next} eruption is from that geyser.
 
 \begin{figure}[tb]
 \centerline{
@@ -123,6 +133,29 @@ another in one unit of time.
 
 \section{Mixtures}
 
+Above, MMs are typically not presented in the conditional distribution
+form we saw above.  Let's see how to reconcile the standard description
+with what we saw above.
+
+Say $Y$ is discrete.  Then
+
+\begin{equation}
+P(Y = w) = \sum_{v} P(S = v)
+\end{equation}
+
+So in terms of cumulative distribution functions (cdfs),
+
+\begin{equation}
+F_Y(w) = P(Y \leq w) = 
+\sum_{v} P(Y \leq w) ~ P(S = v) =
+\sum_{v} c_v F_S(v)
+\end{equation}
+
+where 
+
+\begin{equation}
+c_v = P(S = v)
+\end{equation}
 Consider random variables $X_1,...,X_k$, with cumulative distribution
 functions $F_{X_i}$ (not necessarily independent), and let $c_i, ~
 i=1,...,k$ be nonnegative numbers whose sum is 1.  Define the random
