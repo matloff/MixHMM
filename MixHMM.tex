@@ -5,7 +5,7 @@
 
 \begin{document} 
 
-\title{Mixture and Hidden Markov Models}
+\title{Mixture and Hidden Markov Models: a Unified Introductions}
 \author{Norman Matloff \\
    Department of Computer Science \\
    University of California, Davis}
@@ -21,7 +21,9 @@ bioinformatics and language processing.
 As there is a natural connection of mixture models (MMs) to HMMs, we
 present both here.  
 
-\section{First Motivating Example:  Old Faithful Geyser}
+\section{Introduction}
+
+\subsection{First Motivating Example:  Old Faithful Geyser}
 
 The data here consist of waiting times between eruptions of the famous
 Old Faithful geyser in the US' Yellowstone National Park.  The dataset
@@ -54,7 +56,7 @@ a way that the probability of a 0, which is 0.5 in the original
 transmitted data, is 0.20 during noisy periods.  Suppose that on average
 10\% of the bits arrive during noise periods.
 
-\section{``Hidden'' States}
+\subsection{``Hidden'' States}
 
 For the purposes of the discussion here, let's take as our model the
 ``two underground geysers'' version.  Our \textit{hidden}, i.e.\ unknown, state
@@ -71,7 +73,7 @@ two geysers, we observe the minimum of two geyser times.  So, from this
 point onward, we will mostly focus on the second motivating model, that
 of the noisy network.
 
-\section{``Time''}
+\subsection{``Time''}
 
 In some applications, time is really time.  If our data is stock price,
 say, we have Day 1, Day 2, Day 3 and so on.  In other applications,
@@ -81,7 +83,7 @@ In the case of MMs, in some applications there may not even be a time
 component.  This will be clear below, but for now, let's continue to
 focus on the network example. 
 
-\section{Conditional Probabilities of Observed Values}
+\subsection{Conditional Probabilities of Observed Values}
 
 Let $S_i$ denote the hidden state at time $i$, 
 and let $Y_i$ denote the corresponding observed value.  A key ingredient
@@ -103,7 +105,7 @@ where $f_{Y|S}$ is the conditional density of $Y$ given $S$.
 These conditional distribution quantities are then used to estimate
 model parameters, as we will see below.
 
-\section{Mixture Models vs.\ HMMs: the 10,000 Foot View}
+\subsection{Mixture Models vs.\ HMMs: the 10,000 Foot View}
 
 Both types of models have hidden and observed states.  But HMMs add an
 extra aspect:  We model the probabilities of going from one state to
@@ -133,22 +135,22 @@ estimate the overall proportion of eruptions that come from, say, Geyser
 
 \section{Mixtures}
 
-Above, MMs are typically not presented in the conditional distribution
+Actually, MMs are typically not presented in the conditional distribution
 form we saw above.  Let's see how to reconcile the standard description
 with what we saw above.
 
 Say $Y$ is discrete.  Then
 
 \begin{equation}
-P(Y = w) = \sum_{v} P(S = v)
+P(Y = w) = \sum_{v} P(S = v) ~ P(Y = w | S = v)
 \end{equation}
 
 So in terms of cumulative distribution functions (cdfs),
 
 \begin{equation}
 F_Y(w) = P(Y \leq w) = 
-\sum_{v} P(Y \leq w) ~ P(S = v) =
-\sum_{v} c_v F_S(v)
+\sum_{v} P(Y \leq w | S = v) ~ P(S = v) =
+\sum_{v} c_v F_{Y|S}(w,v)
 \end{equation}
 
 where 
@@ -156,6 +158,14 @@ where
 \begin{equation}
 c_v = P(S = v)
 \end{equation}
+
+Speaking just in terms of cdfs, we say that $F_Y$ is a \textit{mixture}
+of the cdfs $F_{Y|S}$, which simply means that $F_Y$ is a linear
+combination of the $F_{Y|S}$, where the coefficients are nonnegative
+numbers whose sum is 1.
+
+
+
 Consider random variables $X_1,...,X_k$, with cumulative distribution
 functions $F_{X_i}$ (not necessarily independent), and let $c_i, ~
 i=1,...,k$ be nonnegative numbers whose sum is 1.  Define the random
@@ -170,6 +180,11 @@ F_{M}(t) = \sum_{i=1}^k c_i F_{X_i}(t)
 
 Similar relations hold for probability mass functions ($X_i$ discrete)
 and density functions ($X_i$ continuous).
+
+In MM analyssis, the usual quantities of interest are the 
+$F_{X_i}$ and the $c_i$.  In the Old Faithful example, the former 
+typically means using the data to somehow estimate the means and
+standard deviations of the ntwo normal distributions.
 
 \subsection{Use of the mixtools Package}
 
