@@ -14,8 +14,8 @@
 
 The notion of \textit{mixture distributions} is a classical
 probabilistic concept, and arises frequently in applications.  The field
-of \textit{Hidden Markov Models} (HMMs) is more ``recent'' on the scale
-of the history of probabilistic models; HMMS too have very ng
+of \textit{Hidden Markov Models} (HMMs) is more ``modern'' on the scale
+of the history of probabilistic models; HMMs too have very interesting
 applications, such as in bioinformatics and language processing.
 
 As there is a natural connection of mixture models (MMs) to HMMs, we
@@ -23,11 +23,11 @@ present both here.  We also present examples of using R packages to
 apply these models to data.
 
 We will cover some mathematical detail, but subject to the goal of
-keeping things simple.  In the HMM case in particular, calculations
+keeping things simple.  In the HMM case in particular, derivations
 generally involve some famous algorithms that are tedious to follow.
 They consist of some clever algebraic manipulations of complex
-expressions involving conditional probabilities.  We will not go further
-than mentioning them.
+expressions involving conditional probabilities, which will not be
+covered here.
 
 \section{Introduction}
 
@@ -37,26 +37,26 @@ and HMMs do.
 \subsection{First Motivating Example:  Network Noise}
 
 Suppose we have a network line that is known to occasionally be
-noisy, and that during noisy periods all bits will be corrupted in such
+noisy, and that during noisy periods bits will be corrupted in such
 a way that the probability of a 0, which is 0.5 in the original
 transmitted data, is 0.20 during noisy periods.  Suppose that on average
 10\% of the bits arrive during noise periods.
 
 \subsection{Second Motivating Example:  Old Faithful Geyser}
 
-The data here consist of waiting times between eruptions of the famous
+The data here consist of durations of eruptions of the famous
 Old Faithful geyser in the US' Yellowstone National Park.  The dataset
 here is \textbf{faithful}, a built-in dataset in R.
 
 A histogram, obtained via 
 
 \begin{lstlisting}
-> hist(faithful$waiting)
+> hist(faithful$eruptions)
 \end{lstlisting}
 
 and shown in Figure \ref{faithfulhist}, seems to suggest that the
-waiting time distribution is a mixture of two normally distributed random
-variables.  This seems even more plausible if we use R's
+eruption duration distribution is a mixture of two normally distributed random
+variables.  This seems even more plausible if we use R's 
 \textbf{density()} function, as in Figure \ref{faithfulhistsmooth}.
 
 This has led to many physical theories over the years.  Rather elaborate
@@ -139,7 +139,7 @@ estimate the overall proportion of eruptions that come from, say, Geyser
 
 \begin{figure}[tb]
 \centerline{
-\includegraphics[width=3.0in]{Faithful.jpg}
+\includegraphics[width=3.0in]{FaithfulDuration.png}
 }
 \caption{Old Faithful waiting times}
 \label{faithfulhist}
@@ -147,7 +147,7 @@ estimate the overall proportion of eruptions that come from, say, Geyser
 
 \begin{figure}[tb]
 \centerline{
-\includegraphics[width=3.0in]{FaithfulSmooth.png}
+\includegraphics[width=3.0in]{FaithfulDurationSmooth.png}
 }
 \caption{Old Faithful waiting times, smoothed}
 \label{faithfulhistsmooth}
@@ -226,7 +226,7 @@ appearance of the histogram, and used equal weights for my initial
 guesses in that aspect:
 
 \begin{lstlisting}
-> mixout <- normalmixEM(faithful$waiting,lambda=0.5,mu=c(55,80),sigma=10,k=2)
+> mixout <- normalmixEM(faithful$eruptions,lambda=0.5,mu=c(55,80),sigma=10,k=2)
 number of iterations= 9 
 > str(mixout)
 List of 9
@@ -250,7 +250,7 @@ So, the estimate from EM is that about 36\% of the eruptions are of Type
 1, etc.  Interesting, when I tried it without my own initial guesses,
 
 \begin{lstlisting}
-mixout <- normalmixEM(faithful$waiting,k=2)
+mixout <- normalmixEM(faithful$eruptions,k=2)
 \end{lstlisting}
 
 the results were the same, so it seems to be a fairly stable model here.
