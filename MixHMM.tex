@@ -65,9 +65,25 @@ Model for the eruption of the Old Faithful geyser, Yellowstone National
 Park, \textit{GSA Today}, June 2013.  This paper is full of physical
 detail (``... the dynamics of vapor bubble formation (and collapse)
 during boiling in the conduit...''), but in simple terms, it posits two
-processes, which gave rise to long and short waiting times before an
+processes, which gave rise to long and short durations before an
 eruption, consistent with the bimodal density form suggested by the
 above graphs.
+
+\begin{figure}[tb]
+\centerline{
+\includegraphics[width=3.0in]{FaithfulDuration.png}
+}
+\caption{Old Faithful eruption times}
+\label{faithfulhist}
+\end{figure}
+
+\begin{figure}[tb]
+\centerline{
+\includegraphics[width=3.0in]{FaithfulDurationSmooth.png}
+}
+\caption{Old Faithful eruption times, smoothed}
+\label{faithfulhistsmooth}
+\end{figure}
 
 \subsection{``Hidden'' States}
 
@@ -79,8 +95,8 @@ For the purposes of the discussion here, let's take as our geyser model
 that of O'Hara \textit{et al} cited above.  Our \textit{hidden}, i.e.\
 unknown, state here will be the identity of the currently eruption type,
 long (coded 1) or short (coded 2) Our \textit{observed} state is the
-waiting time between consective eruptions.  Note the overlap: some wait
-times for type 1 eruptions may actually be shorter than some wait times
+duration of the eruption.  Note the overlap: some durations
+for type 1 eruptions may actually be shorter than some durations
 for eruptions of type 2.
 
 In many applications, a major part of the modeling process is deciding
@@ -90,7 +106,7 @@ such cases, we have a classic model-fitting choice, the famous
 \textit{Bias-Variance Tradeoff}:  The more hidden states in our model,
 the smaller the bias (in the form of inaccuracy of the model itself) but
 the larger the variance (sampling error); setting the number of hidden
-stages at too large a level will result in overfitting.
+states at too large a level will result in overfitting.
 
 \subsection{``Time''}
 
@@ -98,10 +114,10 @@ In some applications, time is really time.  If our data is stock price,
 say, we have Day 1, Day 2, Day 3 and so on.  In other applications,
 ``time'' is an index, such at Bit 1, Bit 2, Bit 3 etc.
 
-In the case of MMs, probably most applications do not have a time
-component.  Examples will be given, but we use the geyser example, which
-does have a time component, so as to best illustrate the commonality
-between MMs and HMMs.
+In the case of MMs, most applications do not have a time component at
+all.  Examples will be given, but we first use the geyser example, which does
+have a time component, so as to best illustrate the commonality between
+MMs and HMMs.
 
 \subsection{Conditional Probabilities of Observed Values}
 
@@ -133,27 +149,11 @@ probabilities of going from one state to another at each time step.  So
 this is a dynamic model, while MMs are usually static. 
 
 In the Old Faithful example, for instance, in an MM we may wish to
-estimate the overall proportion of eruptions that come from, say, Geyser
-2, while in an HMM we may wish to have an estimated probability that the
-\textit{next} eruption is from that geyser.
+estimate the overall proportion of eruptions of type 1, while in an
+HMM we may wish to have an estimated probability that the \textit{next}
+eruption is of that type.
 
-\begin{figure}[tb]
-\centerline{
-\includegraphics[width=3.0in]{FaithfulDuration.png}
-}
-\caption{Old Faithful waiting times}
-\label{faithfulhist}
-\end{figure}
-
-\begin{figure}[tb]
-\centerline{
-\includegraphics[width=3.0in]{FaithfulDurationSmooth.png}
-}
-\caption{Old Faithful waiting times, smoothed}
-\label{faithfulhistsmooth}
-\end{figure}
-
-\section{Mixture Modells}
+\section{Mixture Models}
 
 Actually, MMs are typically not presented in the conditional distribution
 form we saw above.  Let's see how to reconcile the standard description
@@ -181,18 +181,19 @@ where
 c_v = P(S = v)
 \end{equation}
 
+and $F_{Y|S}$ is the conditional distribution of $Y$ given $S$.
+
 Speaking just in terms of cdfs, we say that $F_Y$ is a \textit{mixture}
 of the cdfs $F_{Y|S}$, which simply means that $F_Y$ is a linear
 combination of the $F_{Y|S}$, where the coefficients are nonnegative
 numbers whose sum is 1.
-
-
 
 Consider random variables $X_1,...,X_k$, with cumulative distribution
 functions $F_{X_i}$ (not necessarily independent), and let $c_i, ~
 i=1,...,k$ be nonnegative numbers whose sum is 1.  Define the random
 variable $M$ to take on the value $X_i$ with probability $c_i$,
 $i=1,...,k$.  Then we say that $M$ has a mixture distribution.
+With this view, the state is only implicit.
 
 Note that
 
@@ -207,7 +208,7 @@ In MM analysis, the usual quantities of interest are the
 $F_{X_i}$ and the $c_i$.  In the Old Faithful example, the former 
 typically means using the data to somehow estimate the means and
 standard deviations of the two normal distributions, and the proportions
-of eruptions of the two geysers.
+of eruptions of the two types.
 
 Probably the most common approach to estimating such quantities is the
 \textit{EM algorithm}.  We will present the details in Section
@@ -285,7 +286,9 @@ Var(Y) = E[Var(Y|M)] + Var[E(Y|M)]
 
 \section{Hidden Markov Models}
 
-\section{The EM Algorithm}
+\section{More on Mixtures};
+
+\subsection{The EM Algorithm}
 \label{emalg}
 
 Now returning to our main topic of mixture models, let's discuss a very
@@ -566,4 +569,63 @@ neatly turns out to have a negative binomial distribution.
 
 
 \end{document}
+
+> x <- geyserSim(100000,0.9,0.3)
+> z <- hmmr::hmm(x,2)
+> summary(z)
+Initial state probabilities model
+pr1 pr2
+  1   0
+
+Transition matrix
+        toS1  toS2
+fromS1 0.681 0.319
+fromS2 0.891 0.109
+
+Response parameters
+Resp 1 : gaussian
+    Re1.(Intercept) Re1.sd
+St1          -0.016  0.991
+St2           1.959  1.018
+
+geyserSim <- function(nTimePers,AtoB,BtoA)
+{
+   x <- vector(length=nTimePers)
+   state <- 'A'
+   for (i in 1:nTimePers) {  # could use rgeom() and while{} instead
+      # check for state change
+      if (state == 'A') {
+         if (runif(1) < AtoB)  # now bad network
+            state <- 'B'
+      } else {  # state == 'B'
+         if (runif(1) < BtoA)  # now bad network
+            state <- 'A'
+      }
+      if (state == 'B') x[i] <- rnorm(1)
+      else x[i] <- rnorm(1) + 2
+   }
+   x
+}
+
+netSim <- function(nBits,goodToBadProb,badToGoodProb,badProb0) 
+{
+   trueBits <- sample(0:1,nBits,replace=TRUE)
+   rcvdBits <- trueBits  
+   state <- 'good'
+   for (i in 1:nBits) {  # could use rgeom() and while{} instead
+      # check for state change 
+      if (state == 'good') {
+         if (runif(1) < goodToBadProb)  # now bad network
+            state <- 'bad'
+      } else {  # state == 'bad'
+         if (runif(1) < badToGoodProb)  # now bad network
+            state <- 'good'
+      }
+      if (state == 'bad' && runif(1) < badProb0)
+         rcvdBits[i] <- 0
+   }
+   cbind(trueBits,rcvdBits)
+}
+
+
 
