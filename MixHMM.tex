@@ -29,10 +29,10 @@ They consist of some clever algebraic manipulations of complex
 expressions involving conditional probabilities, which will not be
 covered here.
 
-\section{Introduction}
+\section{Overview}
 
-Here we will present two examples, and then give an overview of what MMs
-and HMMs do.
+Here we will present two examples, and then give a high-level view of
+the structures and issues are in MMs and HMMs.
 
 \subsection{First Motivating Example:  Network Noise}
 
@@ -99,6 +99,8 @@ duration of the eruption.  Note the overlap: some durations
 for type 1 eruptions may actually be shorter than some durations
 for eruptions of type 2.
 
+\subsection{Number of States}
+
 In many applications, a major part of the modeling process is deciding
 on the number of states.  In our two models above, it is natural to take
 this number to be 2, but generally there is no obvious such number.  In
@@ -107,6 +109,13 @@ such cases, we have a classic model-fitting choice, the famous
 the smaller the bias (in the form of inaccuracy of the model itself) but
 the larger the variance (sampling error); setting the number of hidden
 states at too large a level will result in overfitting.
+
+And, as usual, the smaller the sample size, the greater the danger of
+overfitting.  The \textbf{faithful} dataset consists of only 272
+observations, for instance.  And though the choice of 2 states in that
+example does not seem large relative to 272, we will see below that we
+are maximizing a certain quantity over an enormous number of choices,
+again raising the possibility of overfitting.
 
 \subsection{``Time''}
 
@@ -121,12 +130,12 @@ MMs and HMMs.
 
 \subsection{Conditional Probabilities of Observed Values}
 
-Let $S_i$ denote the hidden state at time $i$, 
-and let $Y_i$ denote the corresponding observed value.  A key ingredient
-in the analysis will be expressions of the form
+Let $S$ denote the hidden state, and let $Y$ denote the corresponding
+observed value.  A key ingredient in the analysis will be expressions of
+the form
 
 \begin{equation}
-P(Y_i = w | S _i = v)
+P(Y = w | S  = v)
 \end{equation}
 
 If $Y$ is continuous rather than discrete, the above expression would be
@@ -136,7 +145,13 @@ something like
 f_{Y|S} (w,v) 
 \end{equation}
 
-where $f_{Y|S}$ is the conditional density of $Y$ given $S$.
+where $f_{Y|S}$ is the conditional density of $Y$ given $S$:
+
+\begin{equation}
+f_{Y|S}(w,v) 
+= \frac{d}{dw} F_{Y|S}(w,v) 
+= \frac{d}{dw} P(Y \leq w ~|~ S = v)
+\end{equation}
 
 These conditional distribution quantities are then used to estimate
 model parameters, as we will see below.
@@ -146,7 +161,7 @@ model parameters, as we will see below.
 Both types of models have hidden and observed states.  But HMMs add an
 extra aspect:  We model the system as evolving in time, with
 probabilities of going from one state to another at each time step.  So
-this is a dynamic model, while MMs are usually static. 
+this is a dynamic model, while MMs are static. 
 
 In the Old Faithful example, for instance, in an MM we may wish to
 estimate the overall proportion of eruptions of type 1, while in an
@@ -160,6 +175,7 @@ form we saw above.  Let's see how to reconcile the standard description
 with what we saw above.
 
 \subsection{Definition}
+\label{mixdef}
 
 Say $Y$ is discrete.  Then
 
@@ -181,34 +197,42 @@ where
 c_v = P(S = v)
 \end{equation}
 
-and $F_{Y|S}$ is the conditional distribution of $Y$ given $S$.
-
 Speaking just in terms of cdfs, we say that $F_Y$ is a \textit{mixture}
 of the cdfs $F_{Y|S}$, which simply means that $F_Y$ is a linear
 combination of the $F_{Y|S}$, where the coefficients are nonnegative
-numbers whose sum is 1.
+numbers whose sum is 1.\footnote{In math parlance, we say that $F_Y$ is
+a \textit{convex} combination of the $F_{(Y|S)}$..}
 
-Consider random variables $X_1,...,X_k$, with cumulative distribution
-functions $F_{X_i}$ (not necessarily independent), and let $c_i, ~
-i=1,...,k$ be nonnegative numbers whose sum is 1.  Define the random
-variable $M$ to take on the value $X_i$ with probability $c_i$,
-$i=1,...,k$.  Then we say that $M$ has a mixture distribution.
-With this view, the state is only implicit.
+Now consider random variables $X_1,...,X_k$, with cdfs $F_{X_i}$ (not
+necessarily independent),\footnote{I use ``X'' for my variable name
+rather than ``Y,'' to emphasize the mainly implicit nature of states.}
+and let $d_i, ~ i=1,...,k$ be nonnegative
+numbers whose sum is 1.  Define the random variable $W$ to take on the
+value $X_i$ with probability $d_i$, $i=1,...,k$.  Then we say that $W$
+has a mixture distribution.  With this view, the state is only implicit.
 
 Note that
 
 \begin{equation}
-F_{M}(t) = \sum_{i=1}^k c_i F_{X_i}(t)
+F_{W}(t) = \sum_{i=1}^k d_i F_{X_i}(t)
 \end{equation}
 
 Similar relations hold for probability mass functions ($X_i$ discrete)
 and density functions ($X_i$ continuous).
 
 In MM analysis, the usual quantities of interest are the 
-$F_{X_i}$ and the $c_i$.  In the Old Faithful example, the former 
+$F_{X_i}$ and the $d_i$.  In the Old Faithful example, the former 
 typically means using the data to somehow estimate the means and
 standard deviations of the two normal distributions, and the proportions
 of eruptions of the two types.
+
+\subsection{Cluster Analysis}
+
+The $X_i$ can be vector-valued, and this is the basis for
+\textit{cluster analysis}, a major field in machine learning/data
+science.
+
+\subsection{The EM Algorithm}
 
 Probably the most common approach to estimating such quantities is the
 \textit{EM algorithm}.  We will present the details in Section
@@ -222,73 +246,62 @@ algorithm is used extensively.  Here we will illustate the function
 distributions.  Again, for the sake of simplicity, we will cover only a
 few of the many features of this function.
 
-I tried initial guesses of means and standard deviations from the
-appearance of the histogram, and used equal weights for my initial
-guesses in that aspect:
+The algorithm is iterative, and thus requires initial guesses for the
+means/standard deviations of the two normal distributions, and the
+proportions of the two eruption types.  I took the former (arguments
+\textbf{mu} and \textbf{sigma}) from the appearance of the histogram,
+and used equal weights for the latter (argument \textbf{lambda}.
 
 \begin{lstlisting}
-> mixout <- normalmixEM(faithful$eruptions,lambda=0.5,mu=c(55,80),sigma=10,k=2)
-number of iterations= 9 
+> mixout <- normalmixEM(faithful$eruptions,
+   lambda=0.5,mu=c(55,80),sigma=10,k=2) number of iterations= 9 
 > str(mixout)
 List of 9
  $ x         : num [1:272] 79 54 74 62 85 55 88 85 51 85 ...
  $ lambda    : num [1:2] 0.361 0.639
  $ mu        : num [1:2] 54.6 80.1
  $ sigma     : num [1:2] 5.87 5.87
- $ loglik    : num -1034
- $ posterior : num [1:272, 1:2] 1.02e-04 1.00 4.12e-03 9.67e-01 1.21e-06
-...
-  ..- attr(*, "dimnames")=List of 2
-  .. ..$ : NULL
-  .. ..$ : chr [1:2] "comp.1" "comp.2"
- $ all.loglik: num [1:10] -1085 -1051 -1037 -1034 -1034 ...
- $ restarts  : num 0
- $ ft        : chr "normalmixEM"
- - attr(*, "class")= chr "mixEM"
+ ...
 \end{lstlisting}
 
-So, the estimate from EM is that about 36\% of the eruptions are of Type
-1, etc.  Interesting, when I tried it without my own initial guesses,
+So, the estimate from EM is that about 36\% of the eruptions are of type
+1.  The estimated mean eruption durations for the two eruption types
+are 54.6 and 80.1.
 
-\begin{lstlisting}
-mixout <- normalmixEM(faithful$eruptions,k=2)
-\end{lstlisting}
+\subsection{Vector-Valued X}
 
-the results were the same, so it seems to be a fairly stable model here.
-
-By the way, since we are working with a hidden variable M here---in
-fact, we are merely postulating that it exists---how do we check this
-assumption?  We'll return to this general idea of model fitting in
-Chapter \ref{chap:mod}.
+The most common mixture modeling is in \textit{cluster analysis}, often
+referred to as \textit{unsupervised learning}.  We have multivariate
+data, say in a marketing application, and wish to find meaningful
+subgroups, say different types of customers.  Again, we don't know what
+types are there, if there are any in some sense, but if we can find
+them, this may be very useful.
 
 \subsection{Mean and Variance of Random Variables Having Mixture
 Distributions}
 \label{mixmeanvar}
 
-Think of the random variables M and Y in the discussion following
-(\ref{continmix}).  Then EY is easy to find using the Law of Total
-Expectation:
+Think of the random variables S and Y in Section \ref{mixdef}.
+Then EY follows the Law of Total Expectation:
 
 \begin{equation}
 \label{mixmean}
-EY = E[E(Y | M)]
+EY = E[E(Y | S)]
 \end{equation}
 
 Of course, evaluating this would require being able to compute E(Y $|$
-M), which is easy in some cases, not so easy in others.
+S), which is easy in some cases, not so easy in others.
 
 Also, using the Law of Total Variance, we have that
 
 \begin{equation}
 \label{mixvar}
-Var(Y) = E[Var(Y|M)] + Var[E(Y|M)]
+Var(Y) = E[Var(Y|S)] + Var[E(Y|S)]
 \end{equation}
 
 \section{Hidden Markov Models}
 
-\section{More on Mixtures};
-
-\subsection{The EM Algorithm}
+\section{The EM Algorithm} 
 \label{emalg}
 
 Now returning to our main topic of mixture models, let's discuss a very
