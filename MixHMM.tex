@@ -154,7 +154,10 @@ f_{Y|S}(w,v)
 \end{equation}
 
 These conditional distribution quantities are then used to estimate
-model parameters, as we will see below.
+model parameters, as we will see below.\footnote{The word
+\textit{estimate} is vital here.  As with any statistical method, our
+results are just estimates of population values, and the larger our
+sample, the more likely our estimate is to the true value.}
 
 \subsection{Mixture Models vs.\ HMMs: the 10,000 Foot View}
 
@@ -275,7 +278,55 @@ referred to as \textit{unsupervised learning}.  We have multivariate
 data, say in a marketing application, and wish to find meaningful
 subgroups, say different types of customers.  Again, we don't know what
 types are there, if there are any in some sense, but if we can find
-them, this may be very useful.
+some, this may be very useful.
+
+The \textbf{faithful} data is bivariate, with columns for both eruption
+duration and waiting time between eruptions.  A plot, seen in Figure
+\ref{bivariatefaithful}, does seem to show two groups.  Of course, if
+there really are two groups, we can't tell for sure here which point
+belongs to which group, but again, in say, a marketing context, we just
+want to identify rough groups.  
+
+\begin{figure}[tb]
+\centerline{
+\includegraphics[width=3.0in]{BivarFaithful.png}
+}
+\caption{Old Faithful bivariate plot}
+\label{bivariatefaithful}
+\end{figure}
+
+In the univariate case, we assumed normal distributions for the
+components.  The \textbf{mixtools} function \textbf{mvnormalmixEM()} 
+fits a multivariate normal model.  I tried running it completely on the
+basis of the argument defaults:
+
+\begin{lstlisting}
+> mvnout <- mvnormalmixEM(fMaithful)
+number of iterations= 12 
+> str(mvnout)
+List of 9
+ $ x         : num [1:272, 1:2] 3.6 1.8 3.33 2.28 4.53 ...
+  ..- attr(*, "dimnames")=List of 2
+  .. ..$ : chr [1:272] "1" "2" "3" "4" ...
+  .. ..$ : chr [1:2] "eruptions" "waiting"
+ $ lambda    : num [1:2] 0.356 0.644
+ $ mu        :List of 2
+  ..$ : num [1:2] 2.04 54.48
+  ..$ : num [1:2] 4.29 79.97
+ $ sigma     :List of 2
+  ..$ : num [1:2, 1:2] 0.0692 0.4352 0.4352 33.6973
+  ..$ : num [1:2, 1:2] 0.17 0.941 0.941 36.046
+...
+\end{lstlisting}
+
+Since our data is bivariate, the estimated mean for each cluster has
+is a vector of length 2, with a 2 $\times$ 2 covariance matrix.  The
+estimates are displayed in the above output.  The \textbf{lambda} output
+again shows the estimated mixing proportions, similar to the ones we
+found in the univariate case.
+
+Cluster analysis is a vast topic.  Estimation via the EM algorithm is
+only one of many methods to choose from.
 
 \subsection{Mean and Variance of Random Variables Having Mixture
 Distributions}
@@ -300,6 +351,66 @@ Var(Y) = E[Var(Y|S)] + Var[E(Y|S)]
 \end{equation}
 
 \section{Hidden Markov Models}
+
+As noted, we have an observable variable $Y$, and a state $S$, but now
+the state evolves in time, resulting in our data
+$
+(S_1,Y_1),
+(S_2,Y_2),
+...,
+(S_n,Y_n),
+$
+
+The time pattern is assumed to be \textit{Markovian}, or ``memoryless'':
+
+\begin{equation}
+P(S_{k+1} = v_{k+1} ~|~ S_1 = v_1, S_2 = v_2, ...  S_k = v_k) =
+P(S_{k+1} = v_{k+1} ~|~ S_k = v_k) 
+\end{equatio
+
+In English,
+
+\begin{quote}
+The probability of a future event, given the present and the past,
+depends only on the present.
+\end{quote}
+
+The states $S_i$ are unobserved, i.e.\ ``hidden,'' but note that also it
+may be real, as in our noisy network example, or just postulated, as in
+the geyser example.  In an analysis of the stock market, for instance,
+one might postulate ``bull'' and ``bear'' moods among the traders.
+
+\begin{lstlisting}
+
+> z <- hmmr::hmm(faithful$eruptions,2)
+> summary(z)
+Initial state probabilities model 
+pr1 pr2 
+  1   0 
+
+Transition matrix 
+        toS1  toS2
+fromS1 0.479 0.521
+fromS2 0.938 0.062
+
+Response parameters 
+Resp 1 : gaussian 
+    Re1.(Intercept) Re1.sd
+St1           4.289  0.413
+St2           2.036  0.263
+
+# z is an S4 class, one of whose components, posterior, is a data frame
+> z@posterior$state
+  [1] 1 2 1 2 1 2 1 1 2 1 2 1 1 2 1 2 2 1 2 1 2 2 1 1 1 1 2 1 1 1 1 1 1 1 1 2 2
+ [38] 1 2 1 1 2 1 2 1 1 1 2 1 2 1 1 2 1 2 1 1 2 1 1 2 1 2 1 2 1 1 1 2 1 1 2 1 1
+ [75] 2 1 2 1 1 1 1 1 1 2 1 1 1 1 2 1 2 1 2 1 2 1 1 1 2 1 2 1 2 1 1 2 1 2 1 1 1
+[112] 2 1 1 2 1 2 1 2 1 2 1 1 2 1 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 1 2 1 1 1 2 1 2
+[149] 1 2 1 1 2 1 1 1 1 1 2 1 2 1 2 1 1 1 2 1 2 1 2 2 1 1 1 1 1 2 1 1 2 1 1 1 2
+[186] 1 1 2 1 2 1 2 1 1 1 1 1 1 2 1 2 1 1 2 1 2 1 1 2 1 2 1 2 1 1 1 2 1 2 1 2 1
+[223] 2 1 1 1 1 1 1 1 1 2 1 2 1 2 2 1 1 2 1 2 1 2 1 1 2 1 2 1 2 1 1 1 1 1 1 1 2
+[260] 1 1 1 2 1 2 2 1 1 2 1 2 1
+
+\end{lstlisting}
 
 \section{The EM Algorithm} 
 \label{emalg}
