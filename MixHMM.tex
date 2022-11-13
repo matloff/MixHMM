@@ -12,22 +12,21 @@
 
 \maketitle
 
-The notion of \textit{mixture distributions} is a classical
+The notion of \textit{mixture models} (MMs)  is a classical
 probabilistic concept, and arises frequently in applications.  The field
-of \textit{Hidden Markov Models} (HMMs) is more ``modern'' on the scale
-of the history of probabilistic models; HMMs too have very interesting
+of \textit{Hidden Markov Models} (HMMs) is also a quite well established
+probabilistic model, but has received much more attention with the rise
+of interest in machine learning.  HMMs too have very interesting
 applications, such as in bioinformatics and language processing.
 
 As there is a natural connection of mixture models (MMs) to HMMs, we
 present both here.  We also present examples of using R packages to
 apply these models to data.
 
-We will cover some mathematical detail, but subject to the goal of
-keeping things simple.  In the HMM case in particular, derivations
-generally involve some famous algorithms that are tedious to follow.
-They consist of some clever algebraic manipulations of complex
-expressions involving conditional probabilities, which will not be
-covered here.
+We will cover enough mathematical detail to specify the models, but
+subject to the goal of keeping things simple.  In the HMM case in
+particular, derivations generally involve some famous algorithms that
+will not be covered in detail here.
 
 \section{Overview}
 
@@ -42,11 +41,14 @@ a way that the probability of a 0, which is 0.5 in the original
 transmitted data, is 0.20 during noisy periods.  Suppose that on average
 10\% of the bits arrive during noise periods.
 
+We focus on the situation in which the status of the line, working vs.\
+noisy, is unknown.  It thus is a \textit{hidden state}.
+
 \subsection{Second Motivating Example:  Old Faithful Geyser}
 
 The data here consist of durations of eruptions of the famous
 Old Faithful geyser in the US' Yellowstone National Park.  The dataset
-here is \textbf{faithful}, a built-in dataset in R.
+is \textbf{faithful}, a built-in dataset in R.
 
 A histogram, obtained via 
 
@@ -57,7 +59,15 @@ A histogram, obtained via
 and shown in Figure \ref{faithfulhist}, seems to suggest that the
 eruption duration distribution is a mixture of two normally distributed random
 variables.  This seems even more plausible if we use R's 
-\textbf{density()} function, as in Figure \ref{faithfulhistsmooth}.
+\textbf{density()} function, as in Figure
+\ref{faithfulhistsmooth}.\footnote{A histogram is a probability density
+estimate (as long as one keeps the total area under the curve to be 1.0,
+as we have done here by setting \textbf{freq} to FALSE.  More advanced
+density estimators, such as produced by R's \textbf{density()} funciton,
+produce smoother and potentially more accurate plots.  Such methods have
+parameters analogous to the number of breaks/bins in a histogram; for
+R's \textbf{density()} function, the argument is the bandwidth
+\textbf{bw}, which we have taken to be the default here.}
 
 This has led to many physical theories over the years.  Rather elaborate
 physical models have been developed, such as that in O'Hara and Esawi,
@@ -73,7 +83,7 @@ above graphs.
 \centerline{
 \includegraphics[width=3.0in]{FaithfulDuration.png}
 }
-\caption{Old Faithful eruption times}
+\caption{Old Faithful eruption durations}
 \label{faithfulhist}
 \end{figure}
 
