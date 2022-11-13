@@ -171,6 +171,13 @@ estimate the overall proportion of eruptions of type 1, while in an
 HMM we may wish to have an estimated probability that the \textit{next}
 eruption is of that type.
 
+Another example is a financial dataset included in the HMM software we will
+use.  The (hypothetical) hidden state is whether the stock market
+sentiment is in a ``bull'' or ``bear'' mood.  The market, of course,
+definitely has a time component, daily, hence the HMM analysis.  But the
+authors also do a static analysis, looking at the data as a whole in a
+way similar to the static geyser analysis.
+
 \section{Mixture Models}
 
 Actually, MMs are typically not presented in the conditional distribution
@@ -189,6 +196,7 @@ P(Y = w) = \sum_{v} P(S = v) ~ P(Y = w | S = v)
 So in terms of cumulative distribution functions (cdfs),
 
 \begin{equation}
+\label{mixedFs}
 F_Y(w) = P(Y \leq w) = 
 \sum_{v} P(Y \leq w | S = v) ~ P(S = v) =
 \sum_{v} c_v F_{Y|S}(w,v)
@@ -239,7 +247,35 @@ science.
 
 Probably the most common approach to estimating such quantities is the
 \textit{EM algorithm}.  We will present the details in Section
-\ref{emalg}, but will make use of it now.
+\ref{emalg}, but will make use of it now, so let's at least look at an
+overview here.
+
+Say the distribution of some probabilistic quantity, depends on two sets
+of parameters, say $\theta$ and $\gamma$.  The algorithm works like
+this:  We set initial guesses, $\theta_0$ and $\gamma_0$ for the two
+parameter sets, then update alternately, first finding a new guess for
+$\theta$ based on our latest guess for $\gamma$, then vice versa.  Of
+course, we also make use of our dataset at every step.
+
+In the geyser example, $\theta$ is consists of the two means and two
+standard deviations, of the two normal distributions.  $\gamma$ is the
+proportions of the two normal distributions, i.e.\ the $c_v$ in Equation
+(\ref{mixedFs}).
+
+\begin{enumerate}
+
+\item Set initial guesses, $\theta_0$ and $\gamma_0$.
+
+\item Form a new guess for $\theta$, denoted $\theta_1$, based
+on $\gamma_0$.
+
+\item Form a new guess for $\gamma$, denoted $\gamma_i$, based
+on $\theta_i$.
+
+\end{enumerate} 
+
+LATER, IN THE HMM SECTION, WE HAVE THETA AS THE MARKOV MATRIX, AND GAMMA
+AS THE MLE STATE SEQUENCE.
 
 \subsection{The mixtools Package}
 
@@ -366,7 +402,7 @@ The time pattern is assumed to be \textit{Markovian}, or ``memoryless'':
 \begin{equation}
 P(S_{k+1} = v_{k+1} ~|~ S_1 = v_1, S_2 = v_2, ...  S_k = v_k) =
 P(S_{k+1} = v_{k+1} ~|~ S_k = v_k) 
-\end{equatio
+\end{equation}
 
 In English,
 
