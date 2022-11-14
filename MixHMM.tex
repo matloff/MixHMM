@@ -44,8 +44,8 @@ the first type, and $\mu_2$, the mean for the second type.
 
 We take a random sample of $n$ batteries and measure the lifetimes of
 each, resulting in our data $Y_1,...,Y_n$, independent and identically
-distributed random variables.  Unseen are the types of these batteries,
-$S_1,...,S_n$, the \textit{hidden state} of each battery.
+distributed (i.i.d.) random variables.  Unseen are the types of these
+batteries, $S_1,...,S_n$, the \textit{hidden state} of each battery.
 
 Our objective is the estimate $\pi$ and the $\mu_i$, based on the $Y_j$.  
 
@@ -194,21 +194,23 @@ example does not seem large relative to 272, we will see below that we
 are maximizing a certain quantity over an enormous number of choices,
 again raising the possibility of overfitting.
 
-\subsection{``Time''}
+\subsection{Time (and ``Time'')}
 
-In some applications, time is really time.  If our data is stock price,
-say, we have Day 1, Day 2, Day 3 and so on.  In other applications,
-``time'' is an index, such at Bit 1, Bit 2, Bit 3 etc.
+In spite of sharing the property of having hidden states, and the $Y|S$
+structure, there is a fundamental difference between the battery example
+above and the other two.  In the battery case, the pairs $(S_j,Y_j)$ are
+iid, while in the network and geyser examples they are sequential in
+time; there is a time dependency between each pair and the next.  The
+stock market example is also sequential.
 
-In the case of MMs, most applications do not have a time component at
-all.  Examples will be given, but we first use the geyser example, which does
-have a time component, so as to best illustrate the commonality between
-MMs and HMMs.
+In some cases ``time'' may correspond to postion, say in HMM genomics
+models, but again, the sequential nature is key.  That is what
+distinguishes HMMs from MMs.
 
 \subsection{Conditional Probabilities of Observed Values}
 
 Let $S$ denote the hidden state, and let $Y$ denote the corresponding
-observed value.  A key ingredient in the analysis will be expressions of
+observed value.  A major ingredient in the analysis will be expressions of
 the form
 
 \begin{equation}
@@ -236,24 +238,24 @@ model parameters, as we will see below.\footnote{The word
 results are just estimates of population values, and the larger our
 sample, the more likely our estimate is to the true value.}
 
-\subsection{Mixture Models vs.\ HMMs: the 10,000 Foot View}
-
-Both types of models have hidden and observed states.  But HMMs add an
-extra aspect:  We model the system as evolving in time, with
-probabilities of going from one state to another at each time step.  So
-this is a dynamic model, while MMs are static. 
-
-In the Old Faithful example, for instance, in an MM we may wish to
-estimate the overall proportion of eruptions of type 1, while in an
-HMM we may wish to have an estimated probability that the \textit{next}
-eruption is of that type.
-
-Another example is a financial dataset included in the HMM software we will
-use.  The (hypothetical) hidden state is whether the stock market
-sentiment is in a ``bull'' or ``bear'' mood.  The market, of course,
-definitely has a time component, daily, hence the HMM analysis.  But the
-authors also do a static analysis, looking at the data as a whole in a
-way similar to the static geyser analysis.
+% \subsection{Mixture Models vs.\ HMMs: the 10,000 Foot View}
+% 
+% Both types of models have hidden and observed states.  But HMMs add an
+% extra aspect:  We model the system as evolving in time, with
+% probabilities of going from one state to another at each time step.  So
+% this is a dynamic model, while MMs are static. 
+% 
+% In the Old Faithful example, for instance, in an MM we may wish to
+% estimate the overall proportion of eruptions of type 1, while in an
+% HMM we may wish to have an estimated probability that the \textit{next}
+% eruption is of that type.
+% 
+% Another example is a financial dataset included in the HMM software we will
+% use.  The (hypothetical) hidden state is whether the stock market
+% sentiment is in a ``bull'' or ``bear'' mood.  The market, of course,
+% definitely has a time component, daily, hence the HMM analysis.  But the
+% authors also do a static analysis, looking at the data as a whole in a
+% way similar to the static geyser analysis.
 
 \section{Mixture Models}
 
