@@ -33,7 +33,23 @@ will not be covered in detail here.
 Here we will present two examples, and then give a high-level view of
 the structures and issues are in MMs and HMMs.
 
-\subsection{First Motivating Example:  Network Noise}
+\subsection{Motivating Example:  Box of Batteries}
+
+Say we have a large box of batteries.  They are known to be of two
+different types, but the two types are visually indistinguishable.
+From past experience, suppose we know that a good model for lifetimes of
+batteries is exponential.  We have three unknown parameters: $\pi$ the
+proportion of batteries of the first type; $\mu_1$, the mean lifetime of
+the first type, and $\mu_2$, the mean for the second type.
+
+We take a random sample of $n$ batteries and measure the lifetimes of
+each, resulting in our data $Y_1,...,Y_n$, independent and identically
+distributed random variables.  Unseen are the types of these batteries,
+$S_1,...,S_n$, the \textit{hidden state} of each battery.
+
+Our objective is the estimate $\pi$ and the $\mu_i$, based on the $Y_j$.  
+
+\subsection{Motivating Example:  Network Noise}
 
 Suppose we have a network line that is known to occasionally be
 noisy, and that during noisy periods bits will be corrupted in such
@@ -42,9 +58,11 @@ transmitted data, is 0.20 during noisy periods.  Suppose that on average
 10\% of the bits arrive during noise periods.
 
 We focus on the situation in which the status of the line, working vs.\
-noisy, is unknown.  It thus is a \textit{hidden state}.
+noisy, is unknown.  It thus is a \textit{hidden state}.  We have data
+$Y_j$ on the received bits, and want to estimate $O_j$, the originally
+sent bits.
 
-\subsection{Second Motivating Example:  Old Faithful Geyser}
+\subsection{Motivating Example:  Old Faithful Geyser}
 
 The data here consist of durations of eruptions of the famous
 Old Faithful geyser in the US' Yellowstone National Park.  The dataset
@@ -62,8 +80,8 @@ variables.  This seems even more plausible if we use R's
 \textbf{density()} function, as in Figure
 \ref{faithfulhistsmooth}.\footnote{A histogram is a probability density
 estimate (as long as one keeps the total area under the curve to be 1.0,
-as we have done here by setting \textbf{freq} to FALSE.  More advanced
-density estimators, such as produced by R's \textbf{density()} funciton,
+as we have done here by setting \textbf{freq} to FALSEi).  More advanced
+density estimators, such as produced by R's \textbf{density()} function,
 produce smoother and potentially more accurate plots.  Such methods have
 parameters analogous to the number of breaks/bins in a histogram; for
 R's \textbf{density()} function, the argument is the bandwidth
@@ -95,33 +113,82 @@ above graphs.
 \label{faithfulhistsmooth}
 \end{figure}
 
-\subsection{``Hidden'' States}
+Assuming there really are two types of eruptions, our hidden state $S_j$
+for the $j^{th}$ eruption in our dataset is the type of eruption.  $Y_j$
+is the duration of that eruption.  Again, the $S_j$ are unobserved.
 
-In the network example, the hidden state is whether we are currently in
-a clear period (coded 1) or a noisy period (coded 2).  The observed
-state is the actual received bit.
+Our objective is to use the $Y_j$ data to estimate $\pi$, the proportion
+of type 1 eruptions, and
+$
+\mu_1,
+\mu_2,
+\sigma_1 
+\textrm{ and }
+\sigma_2 
+$, the means and standard deviations of the assumed normal distributions
+for duration in the two eruption types.
 
-For the purposes of the discussion here, let's take as our geyser model
-that of O'Hara \textit{et al} cited above.  Our \textit{hidden}, i.e.\
-unknown, state here will be the identity of the currently eruption type,
-long (coded 1) or short (coded 2) Our \textit{observed} state is the
-duration of the eruption.  Note the overlap: some durations
-for type 1 eruptions may actually be shorter than some durations
-for eruptions of type 2.
+% \subsection{``Hidden'' States}
+% 
+% In the network example, the hidden state is whether we are currently in
+% a clear period (coded 1) or a noisy period (coded 2).  The observed
+% state is the actual received bit.
+% 
+% For the purposes of the discussion here, let's take as our geyser model
+% that of O'Hara \textit{et al} cited above.  Our \textit{hidden}, i.e.\
+% unknown, state here will be the identity of the currently eruption type,
+% long (coded 1) or short (coded 2) Our \textit{observed} state is the
+% duration of the eruption.  Note the overlap: some durations
+% for type 1 eruptions may actually be shorter than some durations
+% for eruptions of type 2.
 
 \subsection{Number of States}
 
 In many applications, a major part of the modeling process is deciding
-on the number of states.  In our two models above, it is natural to take
+on the number of states.  In our models above, it is natural to take
 this number to be 2, but generally there is no obvious such number.  In
-such cases, we have a classic model-fitting choice, the famous
-\textit{Bias-Variance Tradeoff}:  The more hidden states in our model,
-the smaller the bias (in the form of inaccuracy of the model itself) but
-the larger the variance (sampling error); setting the number of hidden
-states at too large a level will result in overfitting.
+such cases, we have a classic model-fitting choice, a famous principle
+in model fitting:
 
-And, as usual, the smaller the sample size, the greater the danger of
-overfitting.  The \textbf{faithful} dataset consists of only 272
+\begin{quote}
+
+The \textit{Bias-Variance Tradeoff}.  
+
+Say we wish to predict human weight from height.  We wish to estimate
+the function $w(t) = E(W | H = t)$, the relation between weight and
+height in our population.  We might try a linear model for $w(t)$, but a
+quadratic model would give use greater flexibility.  A cubic model be
+even more general, and so on.
+
+From the notion of a Taylor series in calculus\footnote{Or for those
+with a background in real analysis, the Stone-Weierstrass Theorem.},
+one might think that the higher the degree of the fitted polynomial, the
+better.  But that is merely saying that higher-degree models have
+smaller model bias, and counteracting that is the problem of sampling
+error.  The higher the degree, the more the sampling error (called the
+\textit{standard error} in statistics).  So, we need larger datasets
+for higher-degree models.
+
+If we are on the ``wrong'' side of this tradeoff, the model is said to
+be \textit{overfit}.
+
+\end{quote}
+
+So, the more hidden states in our model, the smaller the model bias but
+the larger the ampling error; setting the number of hidden states at too
+large a level will result in overfitting.
+
+For instance, consider financial time series data, such as daily stock
+market data.  The \textbf{sp500} dataset, included with some software we
+will use below, consists of 772 days of the Standard and Poor market
+average.  In the book associated with the software,\footnote{\textit{Mixture and
+Hidden Markov Models with R,} by Ingmar Visser and Maarten
+Speekenbrink, Springer.} the authors postulate 2 hidden states, ``bull''
+and ``bear'' sentiments among the traders, and fit an HMM accordingly.
+With 3 states, 4 states and so on, we might achieve more accuracy, 
+but eventually the Bias-Variance Tradeoff will result in overfitting.
+
+Simiarly, the \textbf{faithful} dataset consists of only 272
 observations, for instance.  And though the choice of 2 states in that
 example does not seem large relative to 272, we will see below that we
 are maximizing a certain quantity over an enormous number of choices,
