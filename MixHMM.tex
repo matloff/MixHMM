@@ -45,7 +45,7 @@ the first type, and $\mu_2$, the mean for the second type.
 
 We take a random sample of $n$ batteries and measure the lifetimes of
 each, resulting in our data $Y_1,...,Y_n$, independent and identically
-distributed (i.i.d.) random variables.  Unseen are the types of these
+distributed (iid) random variables.  Unseen are the types of these
 batteries, $S_1,...,S_n$, the \textit{hidden state} of each battery.
 
 Our objective is the estimate $q$ and the $\mu_i$, based on the $Y_j$.  
@@ -343,13 +343,14 @@ Denote the mean and variance of $X_i$ here by $\mu_i$ and $\sigma_i^2$
 (\ref{mixmean}) and (\ref{mixvar}) become
 
 \begin{equation}
-\label{EMexpmean}
+\label{MMexpmean}
 EY = \sum_{i=1}^k q_i \mu_i
 \end{equation}
 
 and
 
 \begin{equation}
+\label{MMexpvar}
 \sum_{i=1}^k q_i \sigma_i^2 +
 \sum_{i=1}^k q_i (\mu_i - \hat{\mu})^2
 \end{equation}
@@ -360,9 +361,15 @@ where
 \hat{\mu} = \frac{1}{k} \sum_{i=1}^k \mu_i
 \end{equation}
 
+\subsection{Cluster Analysis}
+
 The $X_i$ can be vector-valued, and this is the basis for
 \textit{cluster analysis}, a major field in machine learning/data
-science.
+science.  There we wish to informally divide our dataset into a few
+groups, thus a mixture problem.  One of the key issues is the number of
+groups to postulate, again deterimined informally.  See
+\textit{https://cran.r-project.org/web/views/Cluster.html} for an
+extensive choice of R libraries.
 
 \subsection{The EM Algorithm}
 
@@ -415,7 +422,7 @@ q \left [ \frac{1}{\sqrt{2\pi} \sigma_1}
 Remember, in every Step 1, $q$ is considered known.  We maximize with
 respect to the $\mu_j$ and $\sigma_j$.
 
-\textbf{Step 2.}  Since $k=2$, (\ref{EMexpmean}) becomes
+\textbf{Step 2.}  Since $k=2$, (\ref{MMexpmean}) becomes
 
 \begin{equation}
 \label{step2}
@@ -547,31 +554,32 @@ Poisson with parameter $\lambda_i, i = 1,2,...,k$.  Then $Y$ has a
 mixture distribution.  Our goal here will be to show that $Y$ is indeed
 overdispersed, i.e. has a large variance than mean.
 
-By the Law of Total Expectation,
-
-\begin{eqnarray}
-\label{meanlamb}
-EY &=& E[E(Y|S)] \\ 
-&=& E(\lambda_S) \label{elambm} \\
-&=& \sum_{i=1}^k q_i \lambda_i
-\end{eqnarray}
-
-Note that in the above, the expression $\lambda_S$ is a random variable,
-since its subscript S is random.  The random variable $\lambda_S$ takes
-on the values $\lambda_1,...,\lambda_k$ with probabilities
-$q_1,...,q_k$, hence that final sum.
-
-The corresponding formula for variance, (\ref{mixvar}), can be used to
-derive $Var(Y)$.
+By the Law of Total Expectation (\ref{MMexpmean})
 
 \begin{eqnarray}
 Var(Y) &=& E[Var(Y|S)] + Var[E(Y|S)] \\ 
 &=& E(\lambda_S) + Var(\lambda_S) \label{thislast} \\
-&=& EY + Var(\lambda_S) \label{thislast} \\
+&=& EY + Var(\lambda_S) \label{thislast} 
 \end{eqnarray}
 
+% \begin{equation}
+% \label{meanlamb}
+% EY = \sum_{i=1}^k q_i \lambda_i
+% \end{equation}
+
+Note that in the above, the expression $\lambda_S$ is a random variable,
+since its subscript S is random.  The random variable $\lambda_S$ takes
+on the values $\lambda_1,...,\lambda_k$ with probabilities
+$q_1,...,q_k$.
+
+% \begin{eqnarray}
+% Var(Y) &=& E[Var(Y|S)] + Var[E(Y|S)] \\ 
+% &=& E(\lambda_S) + Var(\lambda_S) \label{thislast} \\
+% &=& EY + Var(\lambda_S) \label{thislast} 
+% \end{eqnarray}
+
 Did you notice that this last equation achieves our goal of showing
-overdispersed?  Since
+overdispersion?  Since
 
 \begin{equation}
 Var(\lambda_S) > 0
@@ -580,58 +588,58 @@ Var(\lambda_S) > 0
 we have that
 
 \begin{equation}
-Var(Y) > E(\lambda_M) = EY
-\end{equation}
-
-by (\ref{elambm}).
-
-But let's see just how much greater the variance is than the mean.  The
-second term in (\ref{thislast}) is evaluated the same way as in
-(\ref{elambm}):  This is the variance of a random variable that takes on
-the values $\lambda_1,...,\lambda_k$ with probabilities $p_1,...,p_k$,
-which is
-
-\begin{equation}
-\sum_{i=1}^k p_i (\lambda_i - \overline{\lambda})^2
-\end{equation}
-
-where 
-
-\begin{equation}
-\overline{\lambda} =  E\lambda_M = \sum_{i=1}^k p_i \lambda_i
-\end{equation}
-
-Thus
-
-\begin{equation}
-EY = \overline{\lambda}
-\end{equation}
-
-and
-
-\begin{equation}
-Var(Y) = \overline{\lambda} + 
-\sum_{i=1}^k p_i (\lambda_i - \overline{\lambda})^2
-\end{equation}
-
-So, as long as the $\lambda_i$ are not equal, we have
-
-\begin{equation}
 Var(Y) > EY
 \end{equation}
 
-in this Poisson mixture model, in contrast to the single-Poisson case
-in which Var(Y) = EY.  You can now see why the Poisson mixture model is
-called an overdispersion model.
+exactly the definition of overdispersion.
+
+% But let's see just how much greater the variance is than the mean.  The
+% second term in (\ref{thislast}) is evaluated the same way as in
+% (\ref{elambm}):  This is the variance of a random variable that takes on
+% the values $\lambda_1,...,\lambda_k$ with probabilities $p_1,...,p_k$,
+% which is
+% 
+% \begin{equation}
+% \sum_{i=1}^k p_i (\lambda_i - \overline{\lambda})^2
+% \end{equation}
+% 
+% where 
+% 
+% \begin{equation}
+% \overline{\lambda} =  E\lambda_S = \sum_{i=1}^k p_i \lambda_i
+% \end{equation}
+% 
+% Thus
+% 
+% \begin{equation}
+% EY = \overline{\lambda}
+% \end{equation}
+% 
+% and
+% 
+% \begin{equation}
+% Var(Y) = \overline{\lambda} + 
+% \sum_{i=1}^k p_i (\lambda_i - \overline{\lambda})^2
+% \end{equation}
+% 
+% So, as long as the $\lambda_i$ are not equal, we have
+% 
+% \begin{equation}
+% Var(Y) > EY
+% \end{equation}
 
 So, if one has count data in which the variance is greater than the
 mean, one might try using this model.
 
-In mixing the Poissons, there is no need to restrict to discrete M.  In
+In mixing the Poissons, there is no need to restrict to discrete S.  In
 fact, it is not hard to derive the fact that if X has a gamma
 distribution with parameters r and p/(1-p) for some $0 < p < 1$, and Y
 given X has a Poisson distribution with mean X, then the resulting Y
-neatly turns out to have a negative binomial distribution.
+neatly turns out to have a negative binomial
+distribution.\footnote{Recall that this distribution family arises as
+the number of trials, e.g.\ number of coin flips, needed to accumulate
+$m$ succeses, e.g.\ $m$ heads.}  In other words, the negative binomial
+family also has the overdispersion property.
 
 \section{Hidden Markov Models}
 
@@ -644,7 +652,11 @@ $
 (S_n,Y_n),
 $
 
-The time pattern is assumed to be \textit{Markovian}, or ``memoryless'':
+Thus the $Y_j$ are no longer iid.  Instead, the time pattern is assumed
+to be \textit{Markovian}, or ``memoryless'':\footnote{Technically, the
+Markovian nature of the $S_j$ does not imply the same for the $Y_j$.
+For that, we need to assume, say, that conditionally on the $S_j$, the
+random variables $Y_1, Y_2,...$ are independent.}
 
 \begin{equation}
 P(S_{k+1} = v_{k+1} ~|~ S_1 = v_1, S_2 = v_2, ...  S_k = v_k) =
@@ -658,10 +670,29 @@ The probability of a future event, given the present and the past,
 depends only on the present.
 \end{quote}
 
-The states $S_i$ are unobserved, i.e.\ ``hidden,'' but note that also it
+The states $S_i$ are unobserved, i.e.\ ``hidden.''  Note that they 
 may be real, as in our noisy network example, or just postulated, as in
-the geyser example.  In an analysis of the stock market, for instance,
+the geyser example.  In our stock market example, for instance,
 one might postulate ``bull'' and ``bear'' moods among the traders.
+
+\subsection{The EM Algorithm}
+
+The situation here is largely analogous to that of MMs.  For instance,
+consider our battery example above:
+
+\begin{itemize}
+
+\item We again need a model for the distribution of $Y | S$.  In the
+battery example, for instance, that could be exponential with parameter
+$\lambda_S$.
+
+\item The analog of the parameter $q$ is now the \textit{transition
+matrix} of $S$, whose row $i$, column $j$ element is the $P(S_{m+1} = j
+~|~ S_m = i)$.
+
+\end{itemize} 
+
+\subsection{The hmmr Package}
 
 \begin{lstlisting}
 
