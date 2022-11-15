@@ -31,14 +31,15 @@ will not be covered in detail here.
 \section{Overview}
 
 Here we will present two examples, and then give a high-level view of
-the structures and issues are in MMs and HMMs.
+the structures and issues are in MMs and HMMs.  In both models, we have
+an observed variable $Y$, and a hidden or \textit{latent} state $S$.
 
 \subsection{Motivating Example:  Box of Batteries}
 
 Say we have a large box of batteries.  They are known to be of two
 different types, but the two types are visually indistinguishable.
 From past experience, suppose we know that a good model for lifetimes of
-batteries is exponential.  We have three unknown parameters: $\pi$ the
+batteries is exponential.  We have three unknown parameters: $q$ the
 proportion of batteries of the first type; $\mu_1$, the mean lifetime of
 the first type, and $\mu_2$, the mean for the second type.
 
@@ -47,7 +48,7 @@ each, resulting in our data $Y_1,...,Y_n$, independent and identically
 distributed (i.i.d.) random variables.  Unseen are the types of these
 batteries, $S_1,...,S_n$, the \textit{hidden state} of each battery.
 
-Our objective is the estimate $\pi$ and the $\mu_i$, based on the $Y_j$.  
+Our objective is the estimate $q$ and the $\mu_i$, based on the $Y_j$.  
 
 \subsection{Motivating Example:  Network Noise}
 
@@ -117,7 +118,7 @@ Assuming there really are two types of eruptions, our hidden state $S_j$
 for the $j^{th}$ eruption in our dataset is the type of eruption.  $Y_j$
 is the duration of that eruption.  Again, the $S_j$ are unobserved.
 
-Our objective is to use the $Y_j$ data to estimate $\pi$, the proportion
+Our objective is to use the $Y_j$ data to estimate $q$, the proportion
 of type 1 eruptions, and
 $
 \mu_1,
@@ -238,6 +239,26 @@ model parameters, as we will see below.\footnote{The word
 results are just estimates of population values, and the larger our
 sample, the more likely our estimate is to the true value.}
 
+\subsection{Mean and Variance of Random Variables in Latent-State Models}
+\label{mixmeanvar}
+
+$EY$ follows the Law of Total Expectation:
+
+\begin{equation}
+\label{mixmean}
+EY = E[E(Y | S)]
+\end{equation}
+
+Of course, evaluating this would require being able to compute E(Y $|$
+S), which is easy in some cases, not so easy in others.
+
+Also, we have the Law of Total Variance, 
+
+\begin{equation}
+\label{mixvar}
+Var(Y) = E[Var(Y|S)] + Var[E(Y|S)]
+\end{equation}
+
 % \subsection{Mixture Models vs.\ HMMs: the 10,000 Foot View}
 % 
 % Both types of models have hidden and observed states.  But HMMs add an
@@ -278,13 +299,13 @@ So in terms of cumulative distribution functions (cdfs),
 \label{mixedFs}
 F_Y(w) = P(Y \leq w) = 
 \sum_{v} P(Y \leq w | S = v) ~ P(S = v) =
-\sum_{v} c_v F_{Y|S}(w,v)
+\sum_{v} q_v F_{Y|S}(w,v)
 \end{equation}
 
 where 
 
 \begin{equation}
-c_v = P(S = v)
+q_v = P(S = v)
 \end{equation}
 
 Speaking just in terms of cdfs, we say that $F_Y$ is a \textit{mixture}
@@ -293,30 +314,51 @@ combination of the $F_{Y|S}$, where the coefficients are nonnegative
 numbers whose sum is 1.\footnote{In math parlance, we say that $F_Y$ is
 a \textit{convex} combination of the $F_{(Y|S)}$..}
 
-Now consider random variables $X_1,...,X_k$, with cdfs $F_{X_i}$ (not
-necessarily independent),\footnote{I use ``X'' for my variable name
-rather than ``Y,'' to emphasize the mainly implicit nature of states.}
-and let $d_i, ~ i=1,...,k$ be nonnegative
-numbers whose sum is 1.  Define the random variable $W$ to take on the
-value $X_i$ with probability $d_i$, $i=1,...,k$.  Then we say that $W$
-has a mixture distribution.  With this view, the state is only implicit.
+We may have mixtures of more than two distributions.  Consider random
+variables $X_1,...,X_k$, with cdfs $F_{X_i}$ (not necessarily
+independent),\footnote{I use ``X'' for my variable name rather than
+``Y,'' to emphasize the mainly implicit nature of states.} and let $d_i,
+~ i=1,...,k$ be nonnegative numbers whose sum is 1.  Define the random
+variable $W$ to take on the value $X_i$ with probability $q_i$,
+$i=1,...,k$.  Then we say that $W$ has a mixture distribution.  With
+this view, the state is only implicit.
 
 Note that
 
 \begin{equation}
-F_{W}(t) = \sum_{i=1}^k d_i F_{X_i}(t)
+F_{W}(t) = \sum_{i=1}^k q_i F_{X_i}(t)
 \end{equation}
 
 Similar relations hold for probability mass functions ($X_i$ discrete)
 and density functions ($X_i$ continuous).
 
 In MM analysis, the usual quantities of interest are the 
-$F_{X_i}$ and the $d_i$.  In the Old Faithful example, the former 
+$F_{X_i}$ and the $q_i$.  In the Old Faithful example, the former 
 typically means using the data to somehow estimate the means and
 standard deviations of the two normal distributions, and the proportions
 of eruptions of the two types.
 
-\subsection{Cluster Analysis}
+Denote the mean and variance of $X_i$ here by $\mu_i$ and $\sigma_i^2$
+(whether or not the $X_i$ have a normal distribution).  Then
+(\ref{mixmean}) and (\ref{mixvar}) become
+
+\begin{equation}
+\label{EMexpmean}
+EY = \sum_{i=1}^k q_i \mu_i
+\end{equation}
+
+and
+
+\begin{equation}
+\sum_{i=1}^k q_i \sigma_i^2 +
+\sum_{i=1}^k q_i (\mu_i - \hat{\mu})^2
+\end{equation}
+
+where
+
+\begin{equation}
+\hat{\mu} = \frac{1}{k} \sum_{i=1}^k \mu_i
+\end{equation}
 
 The $X_i$ can be vector-valued, and this is the basis for
 \textit{cluster analysis}, a major field in machine learning/data
@@ -325,36 +367,68 @@ science.
 \subsection{The EM Algorithm}
 
 Probably the most common approach to estimating such quantities is the
-\textit{EM algorithm}.  We will present the details in Section
-\ref{emalg}, but will make use of it now, so let's at least look at an
-overview here.
+\textit{EM algorithm}.  The details can become complex, but let's at
+least look at an overview here.
 
 Say the distribution of some probabilistic quantity, depends on two sets
-of parameters, say $\theta$ and $\gamma$.  The algorithm works like
-this:  We set initial guesses, $\theta_0$ and $\gamma_0$ for the two
-parameter sets, then update alternately, first finding a new guess for
-$\theta$ based on our latest guess for $\gamma$, then vice versa.  Of
-course, we also make use of our dataset at every step.
+of parameters, say $\theta$ and $\gamma$, the first describing the
+distribution of $Y|S$ and the second describing the distribution of $S$,
+that is, consisting of the mixing proportions $q_i$.  (We only need
+$q_i,q_2,...,q_{k-1}$, since the proportions must sum to 1.)
 
-In the geyser example, $\theta$ is consists of the two means and two
-standard deviations, of the two normal distributions.  $\gamma$ is the
-proportions of the two normal distributions, i.e.\ the $c_v$ in Equation
-(\ref{mixedFs}).
+In the geyser example, $\theta$ is consists of the two means $\mu_i$ and
+two standard deviations $\sigma_i$ of the two normal distributions, and
+$\gamma$ is the proportion $q$ of the the type 1 eruptions.  
+
+The algorithm works like this:  We set initial guesses, $\theta_0$ and
+$\gamma_0$ for the two parameter sets, then update alternately, first
+finding a new guess for $\theta$ based on our latest guess for $\gamma$,
+then vice versa.  Of course, we also make use of our dataset at every
+step.  So, the core of the algorithm is to iterate the following for
+$i=1,2,3,...$ until convergence:
 
 \begin{enumerate}
 
-\item Set initial guesses, $\theta_0$ and $\gamma_0$.
+\item Form a new guess for $\theta$, denoted $\theta_{i+1}$, based
+on $\gamma_i$.
 
-\item Form a new guess for $\theta$, denoted $\theta_1$, based
-on $\gamma_0$.
-
-\item Form a new guess for $\gamma$, denoted $\gamma_i$, based
-on $\theta_i$.
+\item Form a new guess for $\gamma$, denoted $\gamma_{i+1}$, based
+on $\theta_{i+1}$.
 
 \end{enumerate} 
 
-LATER, IN THE HMM SECTION, WE HAVE THETA AS THE MARKOV MATRIX, AND GAMMA
-AS THE MLE STATE SEQUENCE.
+How does this work in the geyser example?  
+
+\textbf{Step 1.}  The `M' in ``EM'' stands for ``maximization,''
+alluding to the famous statistical estimation tool, Maximum Likelihood
+Estimation, familiar to many readers of this tutorial.  Note that the
+likelihood is calculated using the density of $Y$, which is
+
+\begin{equation}
+f_Y(t) = 
+q \left [ \frac{1}{\sqrt{2\pi} \sigma_1}
+\exp \left ( \frac{t-\mu_1}{\sigma_1} \right)^2 \right ] + 
+(1-q) \left [ \frac{1}{\sqrt{2\pi} \sigma_2}
+\exp \left ( \frac{t-\mu_2}{\sigma_2} \right)^2 \right ]
+\end{equation}
+
+Remember, in every Step 1, $q$ is considered known.  We maximize with
+respect to the $\mu_j$ and $\sigma_j$.
+
+\textbf{Step 2.}  Since $k=2$, (\ref{EMexpmean}) becomes
+
+\begin{equation}
+\label{step2}
+EY = q \mu_1 + (1-q) \mu_2
+\end{equation}
+
+Remember, in every Step 2, the $\mu_j$ (and the $\sigma_j$) are
+considered known.  And, we can estimate $EY$ in the left side
+(\ref{step2}) by the mean $Y$ value in our dataset.  So, we then simply
+solve for $q$ to obtain the latest iterate for $q$.\footnote{For readers who
+know the Method of Moments estimation tool, the Step 2s, the `E' steps,
+can be viewed roughly as using that tool.  For cases with general $k$,
+we need to estimate $k-1$ moments.}
 
 \subsection{The mixtools Package}
 
@@ -368,23 +442,26 @@ The algorithm is iterative, and thus requires initial guesses for the
 means/standard deviations of the two normal distributions, and the
 proportions of the two eruption types.  I took the former (arguments
 \textbf{mu} and \textbf{sigma}) from the appearance of the histogram,
-and used equal weights for the latter (argument \textbf{lambda}.
+and used equal weights for the latter (argument \textbf{lambda}).
 
 \begin{lstlisting}
 > mixout <- normalmixEM(faithful$eruptions,
-   lambda=0.5,mu=c(55,80),sigma=10,k=2) number of iterations= 9 
+   lambda=0.5,mu=c(55,80),sigma=10,k=2) 
+number of iterations= 7
 > str(mixout)
 List of 9
- $ x         : num [1:272] 79 54 74 62 85 55 88 85 51 85 ...
- $ lambda    : num [1:2] 0.361 0.639
- $ mu        : num [1:2] 54.6 80.1
- $ sigma     : num [1:2] 5.87 5.87
+ $ x         : num [1:272] 3.6 1.8 3.33 2.28 4.53 ...
+ $ lambda    : num [1:2] 0.36 0.64
+ $ mu        : num [1:2] 2.05 4.3
+ $ sigma     : num [1:2] 0.364 0.364
+
  ...
 \end{lstlisting}
 
 So, the estimate from EM is that about 36\% of the eruptions are of type
 1.  The estimated mean eruption durations for the two eruption types
-are 54.6 and 80.1.
+are 2.05 and 4.3.  (My initial guess for the standard deviations, 1.0,
+was about 3 times too high.)
 
 \subsection{Vector-Valued X}
 
@@ -443,27 +520,118 @@ found in the univariate case.
 Cluster analysis is a vast topic.  Estimation via the EM algorithm is
 only one of many methods to choose from.
 
-\subsection{Mean and Variance of Random Variables Having Mixture
-Distributions}
-\label{mixmeanvar}
+\subsection{Overdispersion Models}
 
-Think of the random variables S and Y in Section \ref{mixdef}.
-Then EY follows the Law of Total Expectation:
+Recall the following about the Poisson distribution family:
+
+\begin{itemize}
+
+\item [(a)] This family is often used to model counts.
+
+\item [(b)] For any Poisson distribution, the variance equals the mean.
+
+\end{itemize}
+
+In some applications in which we are modeling count data, condition (b)
+is too constraining.  We want a ``Poisson-ish'' distribution in which
+the variance is greater than the mean, called an {\it overdispersion}
+model.
+
+One may then try to fit a mixture of several Poisson distributions,
+instead of a single one.  This does induce overdispersion, as we will
+now see.  
+
+The states here will be totally fictitious, just a vehicle to achieve an
+overdispersed model.  Say the distribution of $Y$ given $S = i$ is
+Poisson with parameter $\lambda_i, i = 1,2,...,k$.  Then $Y$ has a
+mixture distribution.  Our goal here will be to show that $Y$ is indeed
+overdispersed, i.e. has a large variance than mean.
+
+By the Law of Total Expectation,
+
+\begin{eqnarray}
+\label{meanlamb}
+EY &=& E[E(Y|S)] \\ 
+&=& E(\lambda_S) \label{elambm} \\
+&=& \sum_{i=1}^k q_i \lambda_i
+\end{eqnarray}
+
+Note that in the above, the expression $\lambda_S$ is a random variable,
+since its subscript S is random.  The random variable $\lambda_S$ takes
+on the values $\lambda_1,...,\lambda_k$ with probabilities
+$q_1,...,q_k$, hence that final sum.
+
+The corresponding formula for variance, (\ref{mixvar}), can be used to
+derive $Var(Y)$.
+
+\begin{eqnarray}
+Var(Y) &=& E[Var(Y|S)] + Var[E(Y|S)] \\ 
+&=& E(\lambda_S) + Var(\lambda_S) \label{thislast} \\
+&=& EY + Var(\lambda_S) \label{thislast} \\
+\end{eqnarray}
+
+Did you notice that this last equation achieves our goal of showing
+overdispersed?  Since
 
 \begin{equation}
-\label{mixmean}
-EY = E[E(Y | S)]
+Var(\lambda_S) > 0
 \end{equation}
 
-Of course, evaluating this would require being able to compute E(Y $|$
-S), which is easy in some cases, not so easy in others.
-
-Also, using the Law of Total Variance, we have that
+we have that
 
 \begin{equation}
-\label{mixvar}
-Var(Y) = E[Var(Y|S)] + Var[E(Y|S)]
+Var(Y) > E(\lambda_M) = EY
 \end{equation}
+
+by (\ref{elambm}).
+
+But let's see just how much greater the variance is than the mean.  The
+second term in (\ref{thislast}) is evaluated the same way as in
+(\ref{elambm}):  This is the variance of a random variable that takes on
+the values $\lambda_1,...,\lambda_k$ with probabilities $p_1,...,p_k$,
+which is
+
+\begin{equation}
+\sum_{i=1}^k p_i (\lambda_i - \overline{\lambda})^2
+\end{equation}
+
+where 
+
+\begin{equation}
+\overline{\lambda} =  E\lambda_M = \sum_{i=1}^k p_i \lambda_i
+\end{equation}
+
+Thus
+
+\begin{equation}
+EY = \overline{\lambda}
+\end{equation}
+
+and
+
+\begin{equation}
+Var(Y) = \overline{\lambda} + 
+\sum_{i=1}^k p_i (\lambda_i - \overline{\lambda})^2
+\end{equation}
+
+So, as long as the $\lambda_i$ are not equal, we have
+
+\begin{equation}
+Var(Y) > EY
+\end{equation}
+
+in this Poisson mixture model, in contrast to the single-Poisson case
+in which Var(Y) = EY.  You can now see why the Poisson mixture model is
+called an overdispersion model.
+
+So, if one has count data in which the variance is greater than the
+mean, one might try using this model.
+
+In mixing the Poissons, there is no need to restrict to discrete M.  In
+fact, it is not hard to derive the fact that if X has a gamma
+distribution with parameters r and p/(1-p) for some $0 < p < 1$, and Y
+given X has a Poisson distribution with mean X, then the resulting Y
+neatly turns out to have a negative binomial distribution.
 
 \section{Hidden Markov Models}
 
@@ -526,259 +694,6 @@ St2           2.036  0.263
 [260] 1 1 1 2 1 2 2 1 1 2 1 2 1
 
 \end{lstlisting}
-
-\section{The EM Algorithm} 
-\label{emalg}
-
-Now returning to our main topic of mixture models, let's discuss a very
-common tool for fitting such models.
-
-Consider again the example in Section \ref{oldtrick}.  Now suppose p, q
-and r are all unknown, and we wish to estimate them from data. Say we
-will perform the above experiment 50 times, resulting in our data
-$N_1,...,N_{50}$ We will estimate p, q and r by applying some method,
-say the Method of Moments, Maximum Likelihood or some ad hoc method of
-our own, to our data. Each $N_i$ has the distribution seen in $p_N$
-above. This is a parametric family, with 3 parameters. (If, say, r is
-known, we only have a two-parameter family, and things are easier.)
-
-So, how can we estimate those three parameters?  In Chapter
-\ref{chap:est}, we found some general methods for parameter estimation.
-Let's look at one of them, Maximum Likelihood Estimators (MLEs).
-
-In (\ref{mixbinom}), the MLE vector 
-$(\widehat{p},
-  \widehat{q},
-  \widehat{r})'$
-would be found by maximizing
-
-\begin{equation}
-\Pi_{i=1}^n
-\left [ r \binom{10}{N_i} p^{N_i} (1-p)^{10-N_i} +
-(1-r) \binom{10}{N_i} q^{N_i} (1-q)^{10-N_i}
-\right ]
-\end{equation}
-
-After taking derivatives, etc., one would end up with a messy, nonlinear
-set of equations to solve.  One could try {\bf mle()}, but there is a
-better way to get the MLE: the Expection/Maximization (EM) algorithm.
-The derivation and ultimate formulas can get quite complex.
-Fortunately, R libraries exist, such as {\bf mixtools}, so you can avoid
-knowing all the details, as long as you understand the basic notion of a
-mixture model.  
-
-In something like (\ref{hsum}), for instance, one would make initial
-guesses for the $p_M(i)$ and then estimate the parameters of the $g_i$.
-In the next step, we'd do the opposite---take our current guesses for
-the latter parameters as known, and estimate the $p_M(i)$.  Keep going
-until convergence.
-
-To make things concrete, recall the trick coin example Section
-\ref{oldtrick}.  But change it a little, so that the probabilities of
-heads for the two coins are unknown; call them $p_0$ (heads-light coin)
-and $p_1$ (heads-heavy coin).  And also suppose that the two coins are
-not equally likely to be chosen, so that $p_M()$ is not known; denote
-P(M = 1) by q.
-
-Suppose we have sample data, consisting of doing this experiment
-multiple times, say by reaching into the box n times and then doing m
-flips each time.  We then wish to estimate 3 quantities---q and the two
-$p_i$---using our sample data.  
-
-We do so using the following iterative process.  (The account here is
-not exactly EM, but captures the spirit of it.) We set up initial
-guesses, and iterate until convergence:
-
-\begin{itemize}
-
-\item {\bf E step:} Update guess for q (complicated Bayes Rule equations).
-
-\item {\bf M step:} Using the new guess for q, update the gueses for the
-two $p_i$.
-
-\end{itemize}
-
-The details are beyond the scope of this book.\footnote{``M'' in the M
-step refers to the Maximum Likelihood method, a special case of the
-material in Section \ref{mle}.}
-
-\subsection{Example:  Two Kinds of Batteries}
-
-Say a factory produces two kinds of batteries.  One kind has lifetime
-that is exponentially distributed with mean 200 and the other's
-distribution is exponential with mean 500.  Suppose 60\% of the
-factory's production is of the former type, with 40\% being of the
-latter type.  Let's find the mean and variance of the lifetime Y of a
-randomly chosen battery.
-
-Note that the distribution of Y is a mixture, in the sense of Section
-\ref{genmix}, in particular (\ref{continmix}).  Y here is a continuous
-random variable, referred to in that section as the ``continuous
-outcome'' case.   In the notation there, let M be the battery type, with
-M being 0 or 1, for the 200-hour and 500-hour batteries, respectively.
-The conditional density of Y given M = 0 is exponential with mean 200,
-while given M = 1 it is exponential with mean 500.  The unconditional
-density of Y is the mixture of these two exponential densities, as 
-(\ref{continmix}).
-
-We want to find the \underline{un}conditional mean and variance of Y.
-
-Then
-
-\begin{equation}
-\label{batt1}
-E(Y|M)=\left\{ \begin{array}{rl}
-200, & w.p. ~ 0.60 \\
-500, & w.p. ~ 0.40
-\end{array}\right. 
-\end{equation}
-
-and 
-
-\begin{equation}
-\label{batt2}
-Var(Y|M)=\left\{ \begin{array}{rl}
-200^2, & w.p. ~ 0.60 \\
-500^2, & w.p. ~ 0.40
-\end{array}\right. 
-\end{equation}
-
-(recalling that in the exponential family, variance is the square of the
-mean).
-
-We can now use the formulas in Section \ref{mixmeanvar}.  Let $Q_1 =
-E(Y|M)$  and $Q_2 = Var(Y|M)$.  Then
-
-\begin{equation}
-EY = EQ_1 = 0.60 \times 200 + 0.40 \times 500
-\end{equation}
-
-and 
-
-\begin{eqnarray}
-Var(Y) &=& E(Q_2) + Var(Q_1) \\
-&=& (0.60 \times 200^2 + 0.40 \times 500^2) + Var(Q_1) \\
-&=& (0.60 \times 200^2 + 0.40 \times 500^2) + E(Q_1^2) - (EQ_1)^2 \\
-&=& (0.60 \times 200^2 + 0.40 \times 500^2) + (0.60 \times 200^2 + 0.40
-\times 500^2)  \\
-& & - (0.60 \times 200 + 0.40 \times 500)^2 \\
-\end{eqnarray}
-
-\subsection{Example:  Overdispersion Models}
-
-A common model used in practice is that of {\bf overdispersion}, in
-connection with Poisson models.  
-
-Recall the following about the Poisson distribution family:
-
-\begin{itemize}
-
-\item [(a)] This family is often used to model counts.
-
-\item [(b)] For any Poisson distribution, the variance equals the mean.
-
-\end{itemize}
-
-In some cases in which we are modeling count data, condition (b) is too
-constraining.  We want a ``Poisson-ish''
-distribution in which the variance is greater
-than the mean, called {\bf overdispersion}.  
-
-One may then try to fit a mixture of several Poisson distributions,
-instead of a single one.  This does induce overdispersion, as we will
-now see.  
-
-Suppose M can equal 1,2,...,k, with probabilities $p_1,...,p_k$ that sum
-to 1.  Say the distribution of Y given M = i is Poisson with parameter
-$\lambda_i$.  Then Y has a mixture distribution.  Our goal here will be
-to show that Y is overdispersed, i.e. has a large variance than mean.
-
-By the Law of Total Expectation,
-
-\begin{eqnarray}
-\label{meanlamb}
-EY &=& E[E(Y|M)] \\ 
-&=& E(\lambda_M) \label{elambm} \\
-&=& \sum_{i=1}^k p_i \lambda_i
-\end{eqnarray}
-
-Note that in the above, the expression $\lambda_M$ is a random variable,
-since its subscript M is random.  Indeed, it is a function of M, so
-Equation (\ref{egofx}) then applies, yielding the final equation.  The
-random variable $\lambda_M$ takes on the values $\lambda_1,...,\lambda_k$
-with probabilities $p_1,...,p_k$, hence that final sum.
-
-The corresponding formula for variance, (\ref{bis}), can be used to
-derive Var(Y).
-
-\begin{eqnarray}
-Var(Y) &=& E[Var(Y|M)] + Var[E(Y|M)] \\ 
-&=& E(\lambda_M) + Var(\lambda_M) \label{thislast} \\
-&=& EY + Var(\lambda_M) \label{thislast} \\
-\end{eqnarray}
-
-Did you notice that this last equation achieves our goal of showing
-overdispersed?  Since
-
-\begin{equation}
-Var(\lambda_M) > 0
-\end{equation}
-
-we have that
-
-\begin{equation}
-Var(Y) > E(\lambda_M) = EY
-\end{equation}
-
-by (\ref{elambm}).
-
-But let's see just how much greater the variance is than the mean.  The
-second term in (\ref{thislast}) is evaluated the same way as in
-(\ref{elambm}):  This is the variance of a random variable that takes on
-the values $\lambda_1,...,\lambda_k$ with probabilities $p_1,...,p_k$,
-which is
-
-\begin{equation}
-\sum_{i=1}^k p_i (\lambda_i - \overline{\lambda})^2
-\end{equation}
-
-where 
-
-\begin{equation}
-\overline{\lambda} =  E\lambda_M = \sum_{i=1}^k p_i \lambda_i
-\end{equation}
-
-Thus
-
-\begin{equation}
-EY = \overline{\lambda}
-\end{equation}
-
-and
-
-\begin{equation}
-Var(Y) = \overline{\lambda} + 
-\sum_{i=1}^k p_i (\lambda_i - \overline{\lambda})^2
-\end{equation}
-
-So, as long as the $\lambda_i$ are not equal, we have
-
-\begin{equation}
-Var(Y) > EY
-\end{equation}
-
-in this Poisson mixture model, in contrast to the single-Poisson case
-in which Var(Y) = EY.  You can now see why the Poisson mixture model is
-called an overdispersion model.
-
-So, if one has count data in which the variance is greater than the
-mean, one might try using this model.
-
-In mixing the Poissons, there is no need to restrict to discrete M.  In
-fact, it is not hard to derive the fact that if X has a gamma
-distribution with parameters r and p/(1-p) for some $0 < p < 1$, and Y
-given X has a Poisson distribution with mean X, then the resulting Y
-neatly turns out to have a negative binomial distribution.
 
 % Again, there may be a computability issue.  But see the examples below.
 
