@@ -372,10 +372,12 @@ groups to postulate, again deterimined informally.  See
 extensive choice of R libraries.
 
 \subsection{The EM Algorithm}
+\label{emForMM}
 
 Probably the most common approach to estimating such quantities is the
 \textit{EM algorithm}.  The details can become complex, but let's at
-least look at an overview here.
+least look at an overview here.  Let $n$ the number of points in
+our dataset.
 
 Say the distribution of some probabilistic quantity, depends on two sets
 of parameters, say $\theta$ and $\gamma$, the first describing the
@@ -408,8 +410,16 @@ How does this work in the geyser example?
 
 \textbf{Step 1.}  The `M' in ``EM'' stands for ``maximization,''
 alluding to the famous statistical estimation tool, Maximum Likelihood
-Estimation, familiar to many readers of this tutorial.  Note that the
-likelihood is calculated using the density of $Y$, which is
+Estimation (MLE), familiar to many readers of this tutorial.  
+The intuitive view is that we find the value of $\theta$ that ``would
+have made our data most likely occur,'' i.e.\ the value that maximizes
+
+\begin{equation}
+\Pi_{i=1}^n f_{Y}(Y_i; \theta)
+\end{equation}
+
+Note that the likelihood is calculated using the \textit{marginal}
+(i.e.\ unconditional) density of $Y$, which is
 
 \begin{equation}
 f_Y(t) = 
@@ -643,20 +653,20 @@ family also has the overdispersion property.
 
 \section{Hidden Markov Models}
 
-As noted, we have an observable variable $Y$, and a state $S$, but now
+As in MMs, we have an observable variable $Y$, and a state $S$, but now
 the state evolves in time, resulting in our data
 $
 (S_1,Y_1),
 (S_2,Y_2),
 ...,
-(S_n,Y_n),
 $
 
 Thus the $Y_j$ are no longer iid.  Instead, the time pattern is assumed
-to be \textit{Markovian}, or ``memoryless'':\footnote{Technically, the
-Markovian nature of the $S_j$ does not imply the same for the $Y_j$.
-For that, we need to assume, say, that conditionally on the $S_j$, the
-random variables $Y_1, Y_2,...$ are independent.}
+to be \textit{Markovian}, or ``memoryless,'' a property we assume about
+the states $S_j$:\footnote{Technically, the Markovian nature of the
+$S_j$ does not imply the same for the $Y_j$.  For that, we need to
+assume, say, that conditionally on the $S_j$, the random variables $Y_1,
+Y_2,...$ are independent.}
 
 \begin{equation}
 P(S_{k+1} = v_{k+1} ~|~ S_1 = v_1, S_2 = v_2, ...  S_k = v_k) =
@@ -691,6 +701,24 @@ matrix} of $S$, whose row $i$, column $j$ element is the $P(S_{m+1} = j
 ~|~ S_m = i)$.
 
 \end{itemize} 
+
+One difference, though, is that now we also need to estimate the state
+sequence $S_1,...,S_n$ itself ($n$ denoting the number of points in our
+dataset).  This of course is of interest, as it is needed for predicting
+new states $S_{n+1}, S_{n+2},...$ and thus predicting $Y_{n+1},
+Y_{n+2},...$.  But also, the estimated $S_1,...,S_n$ are needed as
+intermediate results in estimating $\theta$ and $\gamma$, as follows,
+using the battery example for concreteness: The analogs of Steps 1 and 2
+in Section \ref{emForMM} are:
+
+\textbf{Step 1:} Use MLE to find estimates of the $\lambda_i$.  Note
+again that this will be based on the \textit{marginal} (i.e.\
+unconditional) density of $Y$,
+
+\begin{equation}
+f_Y(t) = q \lambda_1 e^{-\lambda_1 t)} +
+(1-q) \lambda_2 e^{-\lambda_2 t)}
+\end{equation}
 
 \subsection{The hmmr Package}
 
