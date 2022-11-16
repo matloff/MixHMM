@@ -385,9 +385,11 @@ distribution of $Y|S$ and the second describing the distribution of $S$,
 that is, consisting of the mixing proportions $q_i$.  (We only need
 $q_i,q_2,...,q_{k-1}$, since the proportions must sum to 1.)
 
-In the geyser example, $\theta$ is consists of the two means $\mu_i$ and
-two standard deviations $\sigma_i$ of the two normal distributions, and
-$\gamma$ is the proportion $q$ of the the type 1 eruptions.  
+In the battery example, $\theta$ is the vector $(\lambda_1,\lambda_2)$,
+and $\gamma$ is the proportion $q$ of type 1 batteries.  In the geyser
+example, $\theta$ is consists of the two means $\mu_i$ and two standard
+deviations $\sigma_i$ of the two normal distributions, and $\gamma$ is
+the proportion $q$ of the the type 1 eruptions.  
 
 The algorithm works like this:  We set initial guesses, $\theta_0$ and
 $\gamma_0$ for the two parameter sets, then update alternately, first
@@ -406,20 +408,51 @@ on $\theta_{i+1}$.
 
 \end{enumerate} 
 
-How does this work in the geyser example?  
+How does this work in the battery example?  
 
 \textbf{Step 1.}  The `M' in ``EM'' stands for ``maximization,''
 alluding to the famous statistical estimation tool, Maximum Likelihood
 Estimation (MLE), familiar to many readers of this tutorial.  
 The intuitive view is that we find the value of $\theta$ that ``would
-have made our data most likely occur,'' i.e.\ the value that maximizes
+have made our data most likely to occur,'' i.e.\ the value that maximizes
 
 \begin{equation}
 \Pi_{i=1}^n f_{Y}(Y_i; \theta)
 \end{equation}
 
+(One typically maximizes the log of the above quantity, as sums are
+easier to deal with than products.)
+
 Note that the likelihood is calculated using the \textit{marginal}
 (i.e.\ unconditional) density of $Y$, which is
+
+\begin{equation}
+f_Y(t) = q \lambda_1 e^{-\lambda_1 t)} +
+(1-q) \lambda_2 e^{-\lambda_2 t)}
+\end{equation}
+
+Remember, in every Step 1, $q$ is considered known.  We maximize with
+respect to the $\lambda_j$, not with respect to both
+the $\lambda_j$ and $q$.
+
+\textbf{Step 2.}  Since $k=2$, (\ref{MMexpmean}) becomes
+
+\begin{equation}
+\label{step2}
+EY = q / \lambda_1 + (1-q) / \lambda_2
+\end{equation}
+
+Remember, in every Step 2, the $\lambda_j$ are considered known.  And,
+we can estimate $EY$ in the left side (\ref{step2}) by the mean $Y$
+value in our dataset.  So, we then simply solve for $q$ to obtain the
+latest iterate for $q$.\footnote{For readers who know the Method of
+Moments estimation tool, the EM algorithm can be modified so that we use
+that tool in the Step 2s, the `E' (``Expectation'') steps.  For cases
+with general $k$, which have more than one $q_i$, we need to estimate
+$k-1$ moments.}
+
+The geyser example is similar, except that $f_Y$ is assumed to be a
+mixture of normals:
 
 \begin{equation}
 f_Y(t) = 
@@ -428,24 +461,6 @@ q \left [ \frac{1}{\sqrt{2\pi} \sigma_1}
 (1-q) \left [ \frac{1}{\sqrt{2\pi} \sigma_2}
 \exp \left ( \frac{t-\mu_2}{\sigma_2} \right)^2 \right ]
 \end{equation}
-
-Remember, in every Step 1, $q$ is considered known.  We maximize with
-respect to the $\mu_j$ and $\sigma_j$.
-
-\textbf{Step 2.}  Since $k=2$, (\ref{MMexpmean}) becomes
-
-\begin{equation}
-\label{step2}
-EY = q \mu_1 + (1-q) \mu_2
-\end{equation}
-
-Remember, in every Step 2, the $\mu_j$ (and the $\sigma_j$) are
-considered known.  And, we can estimate $EY$ in the left side
-(\ref{step2}) by the mean $Y$ value in our dataset.  So, we then simply
-solve for $q$ to obtain the latest iterate for $q$.\footnote{For readers who
-know the Method of Moments estimation tool, the Step 2s, the `E' steps,
-can be viewed roughly as using that tool.  For cases with general $k$,
-we need to estimate $k-1$ moments.}
 
 \subsection{The mixtools Package}
 
@@ -475,10 +490,12 @@ List of 9
  ...
 \end{lstlisting}
 
-So, the estimate from EM is that about 36\% of the eruptions are of type
-1.  The estimated mean eruption durations for the two eruption types
-are 2.05 and 4.3.  (My initial guess for the standard deviations, 1.0,
-was about 3 times too high.)
+The \textbf{lambda} component of the return value (not to be confused
+with the $\lambda_i$ in the battery example, just a coincidence in
+maing!) indicates that about 36\% of the eruptions are of type 1.  The
+estimated mean eruption durations for the two eruption types are 2.05
+and 4.3.  (My initial guess for the standard deviations, 1.0, was about
+3 times too high.)
 
 \subsection{Vector-Valued X}
 
@@ -659,6 +676,7 @@ $
 (S_1,Y_1),
 (S_2,Y_2),
 ...,
+(S_n,Y_n)
 $
 
 Thus the $Y_j$ are no longer iid.  Instead, the time pattern is assumed
@@ -687,14 +705,13 @@ one might postulate ``bull'' and ``bear'' moods among the traders.
 
 \subsection{The EM Algorithm}
 
-The situation here is largely analogous to that of MMs.  For instance,
-consider our battery example above:
+The situation here is largely analogous to that of MMs:  
 
 \begin{itemize}
 
 \item We again need a model for the distribution of $Y | S$.  In the
-battery example, for instance, that could be exponential with parameter
-$\lambda_S$.
+geyser example, for instance, that could be Gaussian with the
+$\mu_i$ and $\sigma_i$ parameters.
 
 \item The analog of the parameter $q$ is now the \textit{transition
 matrix} of $S$, whose row $i$, column $j$ element is the $P(S_{m+1} = j
@@ -703,22 +720,18 @@ matrix} of $S$, whose row $i$, column $j$ element is the $P(S_{m+1} = j
 \end{itemize} 
 
 One difference, though, is that now we also need to estimate the state
-sequence $S_1,...,S_n$ itself ($n$ denoting the number of points in our
-dataset).  This of course is of interest, as it is needed for predicting
-new states $S_{n+1}, S_{n+2},...$ and thus predicting $Y_{n+1},
-Y_{n+2},...$.  But also, the estimated $S_1,...,S_n$ are needed as
-intermediate results in estimating $\theta$ and $\gamma$, as follows,
-using the battery example for concreteness: The analogs of Steps 1 and 2
-in Section \ref{emForMM} are:
+sequence $S_1,...,S_n$ itself.  This of course is of interest, as it is
+needed for predicting new states $S_{n+1}, S_{n+2},...$ and thus
+predicting $Y_{n+1}, Y_{n+2},...$.  But also, the estimated
+$S_1,...,S_n$ are needed as intermediate results in estimating $\theta$
+and $\gamma$, as follows.  The analogs of Steps 1 and 2 in Section
+\ref{emForMM} are:
 
-\textbf{Step 1:} Use MLE to find estimates of the $\lambda_i$.  Note
-again that this will be based on the \textit{marginal} (i.e.\
-unconditional) density of $Y$,
-
-\begin{equation}
-f_Y(t) = q \lambda_1 e^{-\lambda_1 t)} +
-(1-q) \lambda_2 e^{-\lambda_2 t)}
-\end{equation}
+\textbf{Step 1:} Use MLE to find estimates of the $\theta$ vector, as
+before.  But now the maximization is much more complex, as it takes into
+account all possible the state sequences $S_1,...,S_n$.  In the geyser
+example, for instance, we find the sequence \textit{and} the $\theta$
+value that ``makes our $Y$ data most likely.''
 
 \subsection{The hmmr Package}
 
