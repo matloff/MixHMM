@@ -6,14 +6,14 @@
 \begin{document} 
 
 \title{Mixture and Hidden Markov Models: a Unified Introduction}
-\author{Norman Matloff \\
+\author{Norman Matloff \\  
    Department of Computer Science \\
    University of California, Davis}
 
 \maketitle
 
 The notion of \textit{mixture models} (MMs)  is a classical
-probabilistic concept, and arises frequently in applications.  The field
+probabilistic concept, arising frequently in applications.  The field
 of \textit{Hidden Markov Models} (HMMs) is also a quite well established
 probabilistic model, but has received much more attention with the rise
 of interest in machine learning.  HMMs too have very interesting
@@ -23,16 +23,17 @@ As there is a natural connection of mixture models (MMs) to HMMs, we
 present both here.  We also present examples of using R packages to
 apply these models to data.
 
-We will cover enough mathematical detail to specify the models, but
-subject to the goal of keeping things simple.  In the HMM case in
-particular, derivations generally involve some famous algorithms that
-will not be covered in detail here.
+We will cover enough mathematical detail to specify the models and
+indicate the statistical issues, but subject to the goal of keeping
+things simple.  In the HMM case in particular, derivations generally
+involve some famous algorithms that will not be covered in detail here.
 
 \section{Overview}
 
-Here we will present two examples, and then give a high-level view of
-the structures and issues are in MMs and HMMs.  In both models, we have
-an observed variable $Y$, and a hidden or \textit{latent} state $S$.
+Here we will present some motivating examples, and then give a
+high-level view of the structures and issues in MMs and HMMs.  In
+both models, we have an observed variable $Y$, and a hidden or
+\textit{latent} state $S$.
 
 \subsection{Motivating Example:  Box of Batteries}
 
@@ -48,7 +49,8 @@ each, resulting in our data $Y_1,...,Y_n$, independent and identically
 distributed (iid) random variables.  Unseen are the types of these
 batteries, $S_1,...,S_n$, the \textit{hidden state} of each battery.
 
-Our objective is the estimate $q$ and the $\mu_i$, based on the $Y_j$.  
+Our objective is the estimate $q$ and the means $\mu_i = 1/\lambda_i$,
+based on the $Y_j$.  
 
 \subsection{Motivating Example:  Network Noise}
 
@@ -72,7 +74,7 @@ is \textbf{faithful}, a built-in dataset in R.
 A histogram, obtained via 
 
 \begin{lstlisting}
-> hist(faithful$eruptions)
+> hist(faithful$eruptions,breaks=18,freq=FALSE)
 \end{lstlisting}
 
 and shown in Figure \ref{faithfulhist}, seems to suggest that the
@@ -90,8 +92,8 @@ R's \textbf{density()} function, the argument is the bandwidth
 
 This has led to many physical theories over the years.  Rather elaborate
 physical models have been developed, such as that in O'Hara and Esawi,
-Model for the eruption of the Old Faithful geyser, Yellowstone National
-Park, \textit{GSA Today}, June 2013.  This paper is full of physical
+``Model for the eruption of the Old Faithful geyser, Yellowstone National
+Park,'' \textit{GSA Today}, June 2013.  This paper is full of physical
 detail (``... the dynamics of vapor bubble formation (and collapse)
 during boiling in the conduit...''), but in simple terms, it posits two
 processes, which gave rise to long and short durations before an
@@ -149,7 +151,8 @@ In many applications, a major part of the modeling process is deciding
 on the number of states.  In our models above, it is natural to take
 this number to be 2, but generally there is no obvious such number.  In
 such cases, we have a classic model-fitting choice, a famous principle
-in model fitting:
+in model fitting.  Here is the issue (iilustrated in a non-MM/HMM
+context):
 
 \begin{quote}
 
@@ -182,12 +185,13 @@ large a level will result in overfitting.
 For instance, consider financial time series data, such as daily stock
 market data.  The \textbf{sp500} dataset, included with some software we
 will use below, consists of 772 days of the Standard and Poor market
-average.  In the book associated with the software,\footnote{\textit{Mixture and
-Hidden Markov Models with R,} by Ingmar Visser and Maarten
-Speekenbrink, Springer.} the authors postulate 2 hidden states, ``bull''
-and ``bear'' sentiments among the traders, and fit an HMM accordingly.
-With 3 states, 4 states and so on, we might achieve more accuracy, 
-but eventually the Bias-Variance Tradeoff will result in overfitting.
+average.  In the book associated with the
+software,\footnote{\textit{Mixture and Hidden Markov Models with R,} by
+Ingmar Visser and Maarten Speekenbrink, Springer.} the authors postulate
+2 hidden states, ``bull'' and ``bear'' sentiments among the traders, and
+fit an HMM accordingly.  With 3 states, 4 states and so on, we might
+achieve more accuracy for the first few degrees, but eventually the
+Bias-Variance Tradeoff will result in overfitting.
 
 Simiarly, the \textbf{faithful} dataset consists of only 272
 observations, for instance.  And though the choice of 2 states in that
@@ -204,7 +208,7 @@ iid, while in the network and geyser examples they are sequential in
 time; there is a time dependency between each pair and the next.  The
 stock market example is also sequential.
 
-In some cases ``time'' may correspond to postion, say in HMM genomics
+In some cases ``time'' may correspond to position, say in HMM genomics
 models, but again, the sequential nature is key.  That is what
 distinguishes HMMs from MMs.
 
@@ -237,7 +241,7 @@ These conditional distribution quantities are then used to estimate
 model parameters, as we will see below.\footnote{The word
 \textit{estimate} is vital here.  As with any statistical method, our
 results are just estimates of population values, and the larger our
-sample, the more likely our estimate is to the true value.}
+sample, the more likely our estimate is close to the true value.}
 
 \subsection{Mean and Variance of Random Variables in Latent-State Models}
 \label{mixmeanvar}
@@ -293,7 +297,10 @@ Say $Y$ is discrete.  Then
 P(Y = w) = \sum_{v} P(S = v) ~ P(Y = w | S = v)
 \end{equation}
 
-So in terms of cumulative distribution functions (cdfs),
+So in terms of cumulative distribution functions
+(cdfs),\footnote{Standard notation for the cdf of a random variable $X$
+is $F_X$.  For the conditional cdf of $X$ given $Z$, we write
+$F_{X,Z}$.}
 
 \begin{equation}
 \label{mixedFs}
@@ -320,8 +327,7 @@ independent),\footnote{I use ``X'' for my variable name rather than
 ``Y,'' to emphasize the mainly implicit nature of states.} and let $d_i,
 ~ i=1,...,k$ be nonnegative numbers whose sum is 1.  Define the random
 variable $W$ to take on the value $X_i$ with probability $q_i$,
-$i=1,...,k$.  Then we say that $W$ has a mixture distribution.  With
-this view, the state is only implicit.
+$i=1,...,k$.  Then we say that $W$ has a mixture distribution.  
 
 Note that
 
@@ -333,8 +339,8 @@ Similar relations hold for probability mass functions ($X_i$ discrete)
 and density functions ($X_i$ continuous).
 
 In MM analysis, the usual quantities of interest are the 
-$F_{X_i}$ and the $q_i$.  In the Old Faithful example, the former 
-typically means using the data to somehow estimate the means and
+$F_{X_i}$ and the $q_i$.  In the Old Faithful example, this
+means using the data to somehow estimate the means and
 standard deviations of the two normal distributions, and the proportions
 of eruptions of the two types.
 
@@ -358,28 +364,17 @@ and
 where
 
 \begin{equation}
-\hat{\mu} = \frac{1}{k} \sum_{i=1}^k \mu_i
+\hat{\mu} = EY
 \end{equation}
-
-\subsection{Cluster Analysis}
-
-The $X_i$ can be vector-valued, and this is the basis for
-\textit{cluster analysis}, a major field in machine learning/data
-science.  There we wish to informally divide our dataset into a few
-groups, thus a mixture problem.  One of the key issues is the number of
-groups to postulate, again deterimined informally.  See
-\textit{https://cran.r-project.org/web/views/Cluster.html} for an
-extensive choice of R libraries.
 
 \subsection{The EM Algorithm}
 \label{emForMM}
 
 Probably the most common approach to estimating such quantities is the
 \textit{EM algorithm}.  The details can become complex, but let's at
-least look at an overview here.  Let $n$ the number of points in
-our dataset.
+least look at an overview here.  
 
-Say the distribution of some probabilistic quantity, depends on two sets
+Say the distribution of some probabilistic quantity depends on two sets
 of parameters, say $\theta$ and $\gamma$, the first describing the
 distribution of $Y|S$ and the second describing the distribution of $S$,
 that is, consisting of the mixing proportions $q_i$.  (We only need
@@ -427,8 +422,8 @@ Note that the likelihood is calculated using the \textit{marginal}
 (i.e.\ unconditional) density of $Y$, which is
 
 \begin{equation}
-f_Y(t) = q \lambda_1 e^{-\lambda_1 t)} +
-(1-q) \lambda_2 e^{-\lambda_2 t)}
+f_Y(t) = q \lambda_1 e^{-\lambda_1 t} +
+(1-q) \lambda_2 e^{-\lambda_2 t}
 \end{equation}
 
 Remember, in every Step 1, $q$ is considered known.  We maximize with
@@ -442,14 +437,14 @@ the $\lambda_j$ and $q$.
 EY = q / \lambda_1 + (1-q) / \lambda_2
 \end{equation}
 
-Remember, in every Step 2, the $\lambda_j$ are considered known.  And,
-we can estimate $EY$ in the left side (\ref{step2}) by the mean $Y$
-value in our dataset.  So, we then simply solve for $q$ to obtain the
-latest iterate for $q$.\footnote{For readers who know the Method of
-Moments estimation tool, the EM algorithm can be modified so that we use
-that tool in the Step 2s, the `E' (``Expectation'') steps.  For cases
-with general $k$, which have more than one $q_i$, we need to estimate
-$k-1$ moments.}
+Remember, in every Step 2, the $\theta_j$ are considered known, in this
+case the $\lambda_i$.  And, we can estimate $EY$ in the left side
+(\ref{step2}) by the mean $Y$ value in our dataset.  So, we then simply
+solve for $q$ to obtain the latest iterate for $q$.\footnote{For readers
+who know the Method of Moments estimation tool, the EM algorithm can be
+modified so that we use that tool in the Step 2s, the `E'
+(``Expectation'') steps.  For cases with general $k$, which have more
+than one $q_i$, we need to estimate $k-1$ moments.}
 
 The geyser example is similar, except that $f_Y$ is assumed to be a
 mixture of normals:
@@ -474,7 +469,9 @@ The algorithm is iterative, and thus requires initial guesses for the
 means/standard deviations of the two normal distributions, and the
 proportions of the two eruption types.  I took the former (arguments
 \textbf{mu} and \textbf{sigma}) from the appearance of the histogram,
-and used equal weights for the latter (argument \textbf{lambda}).
+and used equal weights for the latter (argument
+\textbf{lambda}\footnote{Not to be confused with the $\lambda_i$ in the
+battery example, just a coincidence in naming!}).
 
 \begin{lstlisting}
 > mixout <- normalmixEM(faithful$eruptions,
@@ -490,12 +487,10 @@ List of 9
  ...
 \end{lstlisting}
 
-The \textbf{lambda} component of the return value (not to be confused
-with the $\lambda_i$ in the battery example, just a coincidence in
-maing!) indicates that about 36\% of the eruptions are of type 1.  The
-estimated mean eruption durations for the two eruption types are 2.05
-and 4.3.  (My initial guess for the standard deviations, 1.0, was about
-3 times too high.)
+The \textbf{lambda} component of the return value indicates that about
+36\% of the eruptions are of type 1.  The estimated mean eruption
+durations for the two eruption types are 2.05 and 4.3.  (My initial
+guess for the standard deviations, 1.0, was about 3 times too high.)
 
 \subsection{Vector-Valued X}
 
@@ -545,14 +540,21 @@ List of 9
 ...
 \end{lstlisting}
 
-Since our data is bivariate, the estimated mean for each cluster has
+Since our data is bivariate, the estimated mean for each cluster 
 is a vector of length 2, with a 2 $\times$ 2 covariance matrix.  The
 estimates are displayed in the above output.  The \textbf{lambda} output
 again shows the estimated mixing proportions, similar to the ones we
 found in the univariate case.
 
-Cluster analysis is a vast topic.  Estimation via the EM algorithm is
-only one of many methods to choose from.
+One of the key issues is the number of groups to postulate, again
+deterimined informally, and again something we should do with an eye
+toward avoiding overfitting.  
+
+Cluster analysis is a vast topic, a major field in machine learning/data
+science.  Estimation via the EM algorithm is only one of many methods to
+choose from.  See
+\textit{https://cran.r-project.org/web/views/Cluster.html} for an
+extensive choice of R libraries for clustering.
 
 \subsection{Overdispersion Models}
 
@@ -656,7 +658,8 @@ exactly the definition of overdispersion.
 % \end{equation}
 
 So, if one has count data in which the variance is greater than the
-mean, one might try using this model.
+mean, one might try using this model.  Overdispersion is also of
+interest in some applications where $Y$ is a continuous random variable.
 
 In mixing the Poissons, there is no need to restrict to discrete S.  In
 fact, it is not hard to derive the fact that if X has a gamma
@@ -733,7 +736,25 @@ account all possible the state sequences $S_1,...,S_n$.  In the geyser
 example, for instance, we find the sequence \textit{and} the $\theta$
 value that ``makes our $Y$ data most likely.''
 
+\textbf{Step 2:} As mentioned, in this step we estimate the distribution
+of $S$, in the form of the transition matrix.  This can be done
+directly, since we have an estimated state sequence.  Our estimate for
+the matrix entry in row 2, column 5, for instance, will be the
+proportion of indices $i$ for which $S_{i+} = 5$, among those for which
+$S_i = 2$.
+
+One major problem is that the number of possible state sequences can be
+enormous, $s^n$ for a system with $s$ states.  But there are recursive
+algorithms that have been developed to better organize the computation,
+called the \textit{forward} and \textit{backward} algorithms, and one
+more efficiently perform the maximization, the \textit{Viterbi}
+algorithm.  Interested readers will find many detailed presentations of
+these algorithm on the Web.
+
 \subsection{The hmmr Package}
+
+There are various R packages for fitting HMMs.  The one we present here
+is \textbf{hmmr}.
 
 \begin{lstlisting}
 
@@ -766,6 +787,37 @@ St2           2.036  0.263
 [260] 1 1 1 2 1 2 2 1 1 2 1 2 1
 
 \end{lstlisting}
+
+Our call to \textbf{hmm()} specifies our data $Y_i$, and requests a 2state
+model.  We have taken the default value, NULL, for the \textbf{family}
+argument, which specifies the distribution of $Y | S$.  The value NULL
+is taken by \textbf{hmm()} to mean the Gaussian family.
+
+We see that under this model, if the current state is, say 2, i.e.\
+there was just a type 2 eruption, then we almost certainly the next
+eruption will be of type 1.  On the other hand, after a type 1 eruption,
+there are approximately equal chances that the next eruption will be of
+type 1 or 2.
+
+The mean of $Y | S = 1$ is about 4.3, while the corresponding value for
+state 1 is abou 2.0.  These are close to what we obtaine above with the
+mixture model.  The estimated proportions of the two types, 0.36 and
+0.64, are also similar to the earlier result.
+
+The \textbf{hmmr} package makes heavy use of an earlier package by the
+same authors, \textbf{depmixS4}.  The ``S4'' part of that latter name
+alludes to the fact the main function of of the package, \textbf{dpmix()}
+returns objects of R class S4.  One of the components in this object
+type, \textbf{posterior}, contains information about the final estimated
+state sequence.  The software has found, for instance, that the most
+likely scenario was that $S_1 = 1, S_2 = 2, S_3 = 1,
+...$.\footnote{Readers who know Bayesian statistics should not interpret
+this wording to me that this is ``Bayesian'' analysis in the sense of
+subjective prior distributions, which is not the case.  Of course, since
+we are working with various conditional and unconditional distribution,
+Bayes' \textit{Rule} of probability \textit{is} used, but not in the
+subjective sense.}
+
 
 % Again, there may be a computability issue.  But see the examples below.
 
