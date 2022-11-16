@@ -674,20 +674,12 @@ family also has the overdispersion property.
 \section{Hidden Markov Models}
 
 As in MMs, we have an observable variable $Y$, and a state $S$, but now
-the state evolves in time, resulting in our data
-$
-(S_1,Y_1),
-(S_2,Y_2),
-...,
-(S_n,Y_n)
-$
-
-Thus the $Y_j$ are no longer iid.  Instead, the time pattern is assumed
-to be \textit{Markovian}, or ``memoryless,'' a property we assume about
-the states $S_j$:\footnote{Technically, the Markovian nature of the
-$S_j$ does not imply the same for the $Y_j$.  For that, we need to
-assume, say, that conditionally on the $S_j$, the random variables $Y_1,
-Y_2,...$ are independent.}
+the state evolves in time.  Thus the $Y_j$ are no longer iid.  Instead,
+the time pattern is assumed to be \textit{Markovian}, or ``memoryless,''
+a property we assume about the states $S_j$:\footnote{Technically, the
+Markovian nature of the $S_j$ does not imply the same for the $Y_j$.
+For that, we need to assume, say, that conditionally on the $S_j$, the
+random variables $Y_1, Y_2,...$ are independent.}
 
 \begin{equation}
 P(S_{k+1} = v_{k+1} ~|~ S_1 = v_1, S_2 = v_2, ...  S_k = v_k) =
@@ -701,7 +693,7 @@ The probability of a future event, given the present and the past,
 depends only on the present.
 \end{quote}
 
-The states $S_i$ are unobserved, i.e.\ ``hidden.''  Note that they 
+Again the states $S_i$ are unobserved, i.e.\ ``hidden.''  Note that they 
 may be real, as in our noisy network example, or just postulated, as in
 the geyser example.  In our stock market example, for instance,
 one might postulate ``bull'' and ``bear'' moods among the traders.
@@ -714,11 +706,11 @@ The situation here is largely analogous to that of MMs:
 
 \item We again need a model for the distribution of $Y | S$.  In the
 geyser example, for instance, that could be Gaussian with the
-$\mu_i$ and $\sigma_i$ parameters.
+$\mu_i$ and $\sigma_i$ as parameters.
 
 \item The analog of the parameter $q$ is now the \textit{transition
-matrix} of $S$, whose row $i$, column $j$ element is the $P(S_{m+1} = j
-~|~ S_m = i)$.
+matrix} of $S$, whose row $i$, column $j$ element is $P(S_{m+1} = j
+~|~ S_m = i)$, which as noted does not depend on $m$.
 
 \end{itemize} 
 
@@ -746,7 +738,7 @@ $S_i = 2$.
 One major problem is that the number of possible state sequences can be
 enormous, $s^n$ for a system with $s$ states.  But there are recursive
 algorithms that have been developed to better organize the computation,
-called the \textit{forward} and \textit{backward} algorithms, and one
+called the \textit{forward} and \textit{backward} algorithms, and to
 more efficiently perform the maximization, the \textit{Viterbi}
 algorithm.  Interested readers will find many detailed presentations of
 these algorithm on the Web.
@@ -788,25 +780,25 @@ St2           2.036  0.263
 
 \end{lstlisting}
 
-Our call to \textbf{hmm()} specifies our data $Y_i$, and requests a 2state
+Our call to \textbf{hmm()} specifies our data $Y_i$, and requests a 2-state
 model.  We have taken the default value, NULL, for the \textbf{family}
 argument, which specifies the distribution of $Y | S$.  The value NULL
 is taken by \textbf{hmm()} to mean the Gaussian family.
 
 We see that under this model, if the current state is, say 2, i.e.\
-there was just a type 2 eruption, then we almost certainly the next
+there was just a type 2 eruption, then almost certainly the next
 eruption will be of type 1.  On the other hand, after a type 1 eruption,
 there are approximately equal chances that the next eruption will be of
 type 1 or 2.
 
 The mean of $Y | S = 1$ is about 4.3, while the corresponding value for
-state 1 is abou 2.0.  These are close to what we obtaine above with the
+state 1 is abou 2.0.  These are close to what we obtained above with the
 mixture model.  The estimated proportions of the two types, 0.36 and
 0.64, are also similar to the earlier result.
 
 The \textbf{hmmr} package makes heavy use of an earlier package by the
 same authors, \textbf{depmixS4}.  The ``S4'' part of that latter name
-alludes to the fact the main function of of the package, \textbf{dpmix()}
+alludes to the fact the main function of of the package, \textbf{depmix()}
 returns objects of R class S4.  One of the components in this object
 type, \textbf{posterior}, contains information about the final estimated
 state sequence.  The software has found, for instance, that the most
