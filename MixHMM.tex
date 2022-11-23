@@ -25,8 +25,7 @@ apply these models to data.
 
 We will cover enough mathematical detail to specify the models and
 indicate the statistical issues, but subject to the goal of keeping
-things simple.  In the HMM case in particular, derivations generally
-involve some famous algorithms that will not be covered in detail here.
+things simple.  
 
 \section{Overview}
 
@@ -35,12 +34,14 @@ high-level view of the structures and issues in MMs and HMMs.  In
 both models, we have an observed variable $Y$, and a hidden or
 \textit{latent} state $S$.
 
-\subsection{Motivating Example:  Box of Batteries}
+\subsection{Motivating Examples}
+
+\subsubsection{Example:  Box of Batteries}
 
 Say we have a large box of batteries.  They are known to be of two
 different types, but the two types are visually indistinguishable.
 From past experience, suppose we know that a good model for lifetimes of
-batteries is exponential.  We have three unknown parameters: $q$ the
+batteries is exponential.  We have three unknown parameters: $q$, the
 proportion of batteries of the first type; $\mu_1$, the mean lifetime of
 the first type, and $\mu_2$, the mean for the second type.
 
@@ -52,7 +53,7 @@ batteries, $S_1,...,S_n$, the \textit{hidden state} of each battery.
 Our objective is the estimate $q$ and the means $\mu_i = 1/\lambda_i$,
 based on the $Y_j$.  
 
-\subsection{Motivating Example:  Network Noise}
+\subsubsection{Example:  Network Noise}
 
 Suppose we have a network line that is known to occasionally be
 noisy, and that during noisy periods bits will be corrupted in such
@@ -65,7 +66,7 @@ noisy, is unknown.  It thus is a \textit{hidden state}.  We have data
 $Y_j$ on the received bits, and want to estimate $O_j$, the originally
 sent bits.
 
-\subsection{Motivating Example:  Old Faithful Geyser}
+\subsubsection{Example:  Old Faithful Geyser}
 
 The data here consist of durations of eruptions of the famous
 Old Faithful geyser in the US' Yellowstone National Park.  The dataset
@@ -131,25 +132,27 @@ $
 $, the means and standard deviations of the assumed normal distributions
 for duration in the two eruption types.
 
-% \subsection{``Hidden'' States}
-% 
-% In the network example, the hidden state is whether we are currently in
-% a clear period (coded 1) or a noisy period (coded 2).  The observed
-% state is the actual received bit.
-% 
-% For the purposes of the discussion here, let's take as our geyser model
-% that of O'Hara \textit{et al} cited above.  Our \textit{hidden}, i.e.\
-% unknown, state here will be the identity of the currently eruption type,
-% long (coded 1) or short (coded 2) Our \textit{observed} state is the
-% duration of the eruption.  Note the overlap: some durations
-% for type 1 eruptions may actually be shorter than some durations
-% for eruptions of type 2.
+\subsubsection{Example:  Financial Time Series}
+\label{fintech}
+
+The \textbf{sp500} dataset, included with some software we will use
+below, consists of 772 days of the Standard and Poor US stock market
+average.  In the book associated with the
+software,\footnote{\textit{Mixture and Hidden Markov Models with R,} by
+Ingmar Visser and Maarten Speekenbrink, Springer.} the authors postulate
+2 hidden states, ``bull'' and ``bear'' sentiments among the traders, and
+fit an HMM accordingly.  
 
 \subsection{Number of States}
 
 In many applications, a major part of the modeling process is deciding
-on the number of states.  In our models above, it is natural to take
-this number to be 2, but generally there is no obvious such number.  In
+on the number of states.  In our battery, network and geyser examples
+above, it is natural to take this number to be 2, but generally there is
+no obvious such number.  In the financial data example, for instance,
+why have just 2 levels of investor sentiment?  Whyt not 3, or 8, and so
+on?
+
+In
 such cases, we have a classic model-fitting choice, a famous principle
 in model fitting.  Here is the issue (iilustrated in a non-MM/HMM
 context):
@@ -173,42 +176,41 @@ error.  The higher the degree, the more the sampling error (called the
 \textit{standard error} in statistics).  So, we need larger datasets
 for higher-degree models.
 
-If we are on the ``wrong'' side of this tradeoff, the model is said to
-be \textit{overfit}.
+A graph of prediction accuracy versus model complexity, say polynomial
+degree, is typically U-shaped.  If we are on the ``wrong'' side of the
+tradeoff, i.e.\ to the right of the bottom of the U, the model is said
+to be \textit{overfit}.\footnote{See
+\textit{https://github.com/matloff/qeML/blob/master/inst/Overfitting.md}
+for further discussion in the general context.}
 
 \end{quote}
 
 So, the more hidden states in our model, the smaller the model bias but
-the larger the ampling error; setting the number of hidden states at too
+the larger the sampling error; setting the number of hidden states at too
 large a level will result in overfitting.
 
-For instance, consider financial time series data, such as daily stock
-market data.  The \textbf{sp500} dataset, included with some software we
-will use below, consists of 772 days of the Standard and Poor market
-average.  In the book associated with the
-software,\footnote{\textit{Mixture and Hidden Markov Models with R,} by
-Ingmar Visser and Maarten Speekenbrink, Springer.} the authors postulate
-2 hidden states, ``bull'' and ``bear'' sentiments among the traders, and
-fit an HMM accordingly.  With 3 states, 4 states and so on, we might
-achieve more accuracy for the first few degrees, but eventually the
-Bias-Variance Tradeoff will result in overfitting.
+For instance, consider financial time series data as in Section
+\ref{fintech}.  The authors postulate 2 hidden states, ``bull'' and
+``bear'' sentiments among the traders, and fit an HMM accordingly.  With
+3 states, 4 states and so on, we might achieve more accuracy for the
+first few models, but eventually the Bias-Variance Tradeoff will result
+in overfitting.
 
-Simiarly, the \textbf{faithful} dataset consists of only 272
-observations, for instance.  And though the choice of 2 states in that
-example does not seem large relative to 272, we will see below that we
-are maximizing a certain quantity over an enormous number of choices,
-again raising the possibility of overfitting.
+And though the choice of 2 states in that example does not seem large
+relative to 772, we will see below that we are maximizing a certain
+quantity over an enormous number of choices, again raising the
+possibility of overfitting.
 
 \subsection{Time (and ``Time'')}
 
 In spite of sharing the property of having hidden states, and the $Y|S$
 structure, there is a fundamental difference between the battery example
-above and the other two.  In the battery case, the pairs $(S_j,Y_j)$ are
-iid, while in the network and geyser examples they are sequential in
-time; there is a time dependency between each pair and the next.  The
-stock market example is also sequential.
+above and the others.  In the battery case, the pairs $(S_j,Y_j)$ are
+iid, while in the network, geyser and financial examples they are
+sequential in time; there is a time dependency between each pair and the
+next.  
 
-In some cases ``time'' may correspond to position, say in HMM genomics
+In some cases ``time'' may correspond to position. say in HMM genomics
 models, but again, the sequential nature is key.  That is what
 distinguishes HMMs from MMs.
 
@@ -238,23 +240,26 @@ f_{Y|S}(w,v)
 \end{equation}
 
 These conditional distribution quantities are then used to estimate
-model parameters, as we will see below.\footnote{The word
-\textit{estimate} is vital here.  As with any statistical method, our
-results are just estimates of population values, and the larger our
-sample, the more likely our estimate is close to the true value.}
+model parameters, as we will see below.
+
+\subsection{We Work Only with Sample Data}
+
+The word \textit{estimate} is vital above.  As with any statistical
+method, our results are just estimates of population values, and the
+larger our sample, the more likely our estimate is close to the true
+value.  This also means that the larger our sample, the further to the
+right at which the bottom of the U curve occurs; in other words, with
+larger samples, we can afford to fit more complex models.
 
 \subsection{Mean and Variance of Random Variables in Latent-State Models}
 \label{mixmeanvar}
 
-$EY$ follows the Law of Total Expectation:
+A useful expression for $EY$ follows from the Law of Total Expectation:
 
 \begin{equation}
 \label{mixmean}
 EY = E[E(Y | S)]
 \end{equation}
-
-Of course, evaluating this would require being able to compute E(Y $|$
-S), which is easy in some cases, not so easy in others.
 
 Also, we have the Law of Total Variance, 
 
@@ -327,7 +332,7 @@ independent),\footnote{I use ``X'' for my variable name rather than
 ``Y,'' to emphasize the mainly implicit nature of states.} and let $d_i,
 ~ i=1,...,k$ be nonnegative numbers whose sum is 1.  Define the random
 variable $W$ to take on the value $X_i$ with probability $q_i$,
-$i=1,...,k$.  Then we say that $W$ has a mixture distribution.  
+$i=1,...,k$.  Then we say that $W$ is a mixture of the $X_i$.
 
 Note that
 
@@ -346,16 +351,30 @@ of eruptions of the two types.
 
 Denote the mean and variance of $X_i$ here by $\mu_i$ and $\sigma_i^2$
 (whether or not the $X_i$ have a normal distribution).  Then
-(\ref{mixmean}) and (\ref{mixvar}) become
+(\ref{mixmean}) becomes
 
 \begin{equation}
 \label{MMexpmean}
 EY = \sum_{i=1}^k q_i \mu_i
 \end{equation}
 
-and
+What about (\ref{mixvar})?  In the present context, 
 
 \begin{equation}
+E(Y|S) = \mu_S
+\end{equation}
+
+Note that this is a random variable!  It takes on the values
+$\mu_1,...,\mu_k$ with probabilities $1_1,...,q_k$, so its variance is 
+
+\begin{equation}
+\sum_{i=1}^k q_i (\mu_i - \hat{\mu})^2
+\end{equation}
+
+We then have
+
+\begin{equation}
+Var(Y) =
 \label{MMexpvar}
 \sum_{i=1}^k q_i \sigma_i^2 +
 \sum_{i=1}^k q_i (\mu_i - \hat{\mu})^2
@@ -374,11 +393,17 @@ Probably the most common approach to estimating such quantities is the
 \textit{EM algorithm}.  The details can become complex, but let's at
 least look at an overview here.  
 
-Say the distribution of some probabilistic quantity depends on two sets
-of parameters, say $\theta$ and $\gamma$, the first describing the
-distribution of $Y|S$ and the second describing the distribution of $S$,
-that is, consisting of the mixing proportions $q_i$.  (We only need
-$q_i,q_2,...,q_{k-1}$, since the proportions must sum to 1.)
+Say the distribution of some probabilistic quantity depends on 
+a vector of parameters $\omega$.  In many cases, finding a way to
+estimate $\omega$ is very difficult, but the estimation become
+mathematically tractable if we split $\omega$ into two subsets,
+$\theta$ and $\gamma$. 
+
+In our case here, we choose $\theta$ to be the parameters that describe
+distribution of $Y|S$, and choose $\gamma$ to be the parameters
+describing the distribution of $S$, that is, consisting of the mixing
+proportions $q_i$.  (We only need $q_i,q_2,...,q_{k-1}$, since the
+proportions must sum to 1.)
 
 In the battery example, $\theta$ is the vector $(\lambda_1,\lambda_2)$,
 and $\gamma$ is the proportion $q$ of type 1 batteries.  In the geyser
@@ -587,7 +612,7 @@ By the Law of Total Expectation (\ref{MMexpmean})
 
 \begin{eqnarray}
 Var(Y) &=& E[Var(Y|S)] + Var[E(Y|S)] \\ 
-&=& E(\lambda_S) + Var(\lambda_S) \label{thislast} \\
+&=& E(\lambda_S) + Var(\lambda_S) \\
 &=& EY + Var(\lambda_S) \label{thislast} 
 \end{eqnarray}
 
@@ -600,12 +625,6 @@ Note that in the above, the expression $\lambda_S$ is a random variable,
 since its subscript S is random.  The random variable $\lambda_S$ takes
 on the values $\lambda_1,...,\lambda_k$ with probabilities
 $q_1,...,q_k$.
-
-% \begin{eqnarray}
-% Var(Y) &=& E[Var(Y|S)] + Var[E(Y|S)] \\ 
-% &=& E(\lambda_S) + Var(\lambda_S) \label{thislast} \\
-% &=& EY + Var(\lambda_S) \label{thislast} 
-% \end{eqnarray}
 
 Did you notice that this last equation achieves our goal of showing
 overdispersion?  Since
