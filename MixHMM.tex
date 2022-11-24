@@ -608,38 +608,44 @@ Poisson with parameter $\lambda_i, i = 1,2,...,k$.  Then $Y$ has a
 mixture distribution.  Our goal here will be to show that $Y$ is indeed
 overdispersed, i.e. has a large variance than mean.
 
-By the Law of Total Expectation (\ref{MMexpmean})
+By the Law of Total Variance (\ref{MMexpmean})
 
 \begin{eqnarray}
 Var(Y) &=& E[Var(Y|S)] + Var[E(Y|S)] \\ 
-&=& E(\lambda_S) + Var(\lambda_S) \\
-&=& EY + Var(\lambda_S) \label{thislast} 
+&=& E(\lambda_S) + Var(\lambda_S) \label{totvar}
 \end{eqnarray}
 
-% \begin{equation}
-% \label{meanlamb}
-% EY = \sum_{i=1}^k q_i \lambda_i
-% \end{equation}
+Note again that in the above, the expression $\lambda_S$ is a random
+variable, since its subscript S is random.  The random variable
+$\lambda_S$ takes on the values $\lambda_1,...,\lambda_k$ with
+probabilities $q_1,...,q_k$.
 
-Note that in the above, the expression $\lambda_S$ is a random variable,
-since its subscript S is random.  The random variable $\lambda_S$ takes
-on the values $\lambda_1,...,\lambda_k$ with probabilities
-$q_1,...,q_k$.
+Note too that due to the fact that $Y|S$ has a Poisson distribution (it
+was constructed as such), its mean is $\lambda_S$.  So (\ref{totvar})
+becomes
 
-Did you notice that this last equation achieves our goal of showing
-overdispersion?  Since
+\begin{eqnarray}
+Var(Y) &=& E(\lambda_S) + Var(\lambda_S) \\
+&=& E[E(Y|S)] + Var(\lambda_S) \\
+&=& EY + Var(\lambda_S) \\
+\end{eqnarray}
 
-\begin{equation}
-Var(\lambda_S) > 0
-\end{equation}
-
-we have that
+Thus
 
 \begin{equation}
-Var(Y) > EY
+Var(Y) = EY + Var(\lambda_S) \label{thislast}  \geq EY
 \end{equation}
 
-exactly the definition of overdispersion.
+That last inequality comes from the fact that variances are nonnegative.
+In fact, as long as the $\lambda_i$ are not all identical, their
+variance will be strictly positive.  In other words,
+
+\begin{equation}
+Var(Y) >  EY
+\end{equation}
+
+so yes indeed, the given mixture model has the 
+overdispersion property, as desired.
 
 % But let's see just how much greater the variance is than the mean.  The
 % second term in (\ref{thislast}) is evaluated the same way as in
